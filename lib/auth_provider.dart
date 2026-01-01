@@ -95,8 +95,10 @@ class AuthProvider extends ChangeNotifier {
       'code_challenge_method': 'S256',
     });
 
-    // Use a slight delay to let the UI settle
-    web.window.location.href = authUrl.toString();
+    // Usamos replace para que Cognito no sea un "punto de retorno" (protegernos del botón Atrás del browser)
+    // web.window.location.href = authUrl.toString();   <-- Si usamos href cognito es un punto de retorno
+    web.window.location.replace(authUrl.toString());
+    web.document.title = "Sports App";
   }
 
   Future<void> exchangeCodeForTokens(String code) async {
@@ -123,13 +125,12 @@ class AuthProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final idToken = data['id_token'] as String;
-
         // PERSISTENCIA: Guardamos el token crudo
         web.window.sessionStorage.setItem(_storageKey, idToken);
         _userEmail = _decodeEmailFromToken(idToken);
       }
       else {
-        print("Error en Cognito: ${response.body}");
+        log("Error en Cognito: ${response.body}");
         // Capturamos el error específico de Cognito (ej: "invalid_grant")
         final errorData = json.decode(response.body);
         _errorMessage = errorData['error'] ?? "Error desconocido en el servidor";
@@ -137,6 +138,7 @@ class AuthProvider extends ChangeNotifier {
     }
     catch (e) {
       _errorMessage = "Error de conexión. Revisa tu internet.";
+      log(_errorMessage!);
     }
     finally {
       setProcessing(false);
@@ -148,24 +150,22 @@ class AuthProvider extends ChangeNotifier {
     _userEmail = null;
     _isProcessing = false;
     _errorMessage = null;
-
     // LIMPIEZA: Borramos el token persistido
     web.window.sessionStorage.removeItem(_storageKey);
-
     // 2. Limpiamos el verifier de la sesión para seguridad
     web.window.sessionStorage.removeItem('pkce_verifier');
-
     // 3. Notificamos a los widgets (esto mostrará el reloj de arena brevemente)
     notifyListeners();
-
     // 4. REDIRECCIÓN AL SERVIDOR DE COGNITO
     // Usamos el endpoint /logout oficial de AWS
     final logoutUrl = Uri.https(cognitoDomain, '/logout', {
       'client_id': clientId,
       'logout_uri': redirectUri, // DEBE estar en la lista de 'Allowed logout URLs' en la consola de AWS
     });
-
     // 5. El navegador viaja a AWS, AWS cierra sesión y nos devuelve a la App
-    web.window.location.href = logoutUrl.toString();
+    // Do not use href, do not feed the browsers history in an SPA app.
+    // web.window.location.href = logoutUrl.toString();
+    web.window.location.replace(logoutUrl.toString());
+    web.document.title = "Sports App";
   }
 }

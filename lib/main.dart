@@ -30,7 +30,10 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider())
       ],
-      child: const MaterialApp(home: SimpleAuthPage())
+      child: const MaterialApp(
+          title: 'Sports App',
+          home: SimpleAuthPage()
+      )
     )
   );
 }
@@ -51,8 +54,16 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
 
   void _checkAuthStatus() {
     final authProv = context.read<AuthProvider>();
-    // Si ya tenemos el email (recuperado de persistencia), no hacemos nada
-    if (authProv.userEmail != null) return;
+    // Si ya tenemos el email (recuperado de persistencia)
+    if (authProv.userEmail != null) {
+      // SEGURO DE HISTORIAL: Si ya hay sesión, limpiamos cualquier residuo en la URL
+      // y detenemos cualquier ejecución posterior. (Protección contra botón Atrás del browser)
+      if (web.window.location.search.contains('code=')) {
+        log("Sesión activa detectada con código residual. Limpiando URL...");
+        web.window.history.replaceState(null, '', '/');
+      }
+      return;
+    }
 
     final uri = Uri.parse(web.window.location.href);
     final code = uri.queryParameters['code'];
@@ -64,7 +75,10 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
       if (code != null && !authProv.isProcessing) {
         log("Detectado código en URL. Limpiando historial...");
         // Limpiamos la URL para que el código no se procese dos veces si el usuario da atrás/adelante
-        web.window.history.replaceState(null, '', web.window.location.pathname);
+        // web.window.history.replaceState(null, '', web.window.location.pathname);
+        web.window.history.replaceState(null, '', '/');
+        // Limpiamos el título del Tab explícitamente
+        log("✅ Intercambio exitoso. URL e Historial saneados.");
         // We have the code! Exchange it for tokens.
         authProv.exchangeCodeForTokens(code);
       }
@@ -72,6 +86,7 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
         // SOLO REDIRIGE si no hay usuario Y no estamos procesando nada
         authProv.launchLogin();
       }
+      web.document.title = "Sports App";
     });
   }
 
