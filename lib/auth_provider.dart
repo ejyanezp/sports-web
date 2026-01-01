@@ -8,11 +8,15 @@ import 'package:web/web.dart' as web;
 import 'package:http/http.dart' as http;
 
 import 'package:sports/config/env_config.dart';
+import 'package:sports/utils/app_metadata.dart';
 
 class AuthProvider extends ChangeNotifier {
   String? _userEmail;
   bool _isProcessing = false;
   String? _errorMessage;
+
+  // Clave para el almacenamiento
+  final String _storageKey = 'sports_id_token';
 
   final String clientId = EnvConfig.clientId;
   final String cognitoDomain = EnvConfig.cognitoDomain;
@@ -22,6 +26,43 @@ class AuthProvider extends ChangeNotifier {
   String? get userEmail => _userEmail;
   bool get isProcessing => _isProcessing;
   String? get errorMessage => _errorMessage;
+
+  AuthProvider() {
+    _loadPersistedToken();
+  }
+
+  void _loadPersistedToken() {
+    log("Buscando token en sessionStorage...");
+    final savedToken = web.window.sessionStorage.getItem(_storageKey);
+
+    if (savedToken != null) {
+      _userEmail = _decodeEmailFromToken(savedToken);
+      if (_userEmail != null) {
+        log("✅ Usuario recuperado con éxito: $_userEmail");
+      }
+      else {
+        log("⚠️ Token encontrado pero corrupto o inválido.");
+        web.window.sessionStorage.removeItem(_storageKey);
+      }
+    }
+    else {
+      log("ℹ️ No hay sesión previa. Usuario anónimo.");
+    }
+    // No llamamos a notifyListeners aquí porque el constructor
+    // se ejecuta antes de que los widgets escuchen.
+  }
+
+  // Extraemos la lógica de decodificación para reusarla
+  String? _decodeEmailFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      return json.decode(payload)['email'];
+    } catch (e) {
+      return null;
+    }
+  }
 
   // Métodos para cambiar el estado
   void setProcessing(bool value) {
@@ -83,12 +124,9 @@ class AuthProvider extends ChangeNotifier {
         final data = json.decode(response.body);
         final idToken = data['id_token'] as String;
 
-        // Decodificación JWT
-        final parts = idToken.split('.');
-        final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-        final payloadData = json.decode(payload);
-
-        _userEmail = payloadData['email'];
+        // PERSISTENCIA: Guardamos el token crudo
+        web.window.sessionStorage.setItem(_storageKey, idToken);
+        _userEmail = _decodeEmailFromToken(idToken);
       }
       else {
         print("Error en Cognito: ${response.body}");
@@ -110,6 +148,9 @@ class AuthProvider extends ChangeNotifier {
     _userEmail = null;
     _isProcessing = false;
     _errorMessage = null;
+
+    // LIMPIEZA: Borramos el token persistido
+    web.window.sessionStorage.removeItem(_storageKey);
 
     // 2. Limpiamos el verifier de la sesión para seguridad
     web.window.sessionStorage.removeItem('pkce_verifier');

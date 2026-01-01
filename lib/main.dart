@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:sports/config/env_config.dart';
 
+import 'package:sports/config/env_config.dart';
 import 'package:sports/home_page.dart';
 import 'package:sports/auth_provider.dart';
+import 'package:sports/utils/app_metadata.dart';
 
 import 'package:provider/provider.dart';
 import 'package:web/web.dart' as web;
 
 /*
 Execute in LOCALHOST as
-flutter run -d chrome --web-port 8088
+flutter run -d chrome --web-port 8088 \
+  --dart-define=COGNITO_CLIENT_ID=24kod6v45jbijpb2v1tnpkrsg7 \
+  --dart-define=COGNITO_DOMAIN=us-east-1pemnvgmyy.auth.us-east-1.amazoncognito.com \
+  --dart-define=REDIRECT_URI=http://localhost:8088/
 Made with Flutter 3.38.5 / Date: 12/31/2025
 */
-void main() {
+void main() async {
+  // Al usar un plugin (como package_info_plus, shared_preferences, o comunicaciones nativas)
+  // antes del runApp(), se debe llama a WidgetsFlutterBinding.ensureInitialized()
+  WidgetsFlutterBinding.ensureInitialized();
+  // Cargar metadatos de versión
+  await AppMetadata.init();
+  // validación de variables de entorno
   EnvConfig.validate();
 
   runApp(
@@ -40,22 +50,26 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
   }
 
   void _checkAuthStatus() {
+    final authProv = context.read<AuthProvider>();
+    // Si ya tenemos el email (recuperado de persistencia), no hacemos nada
+    if (authProv.userEmail != null) return;
+
     final uri = Uri.parse(web.window.location.href);
     final code = uri.queryParameters['code'];
-    final authProv = context.read<AuthProvider>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Verificamos que el widget todavía exista en pantalla antes de actuar
       if (!mounted) return;
 
       if (code != null && !authProv.isProcessing) {
-        // 1. BLOQUEO: Evita que cualquier otro proceso inicie un redirect
-        authProv.setProcessing(true);
-        // Step 2: We have the code! Exchange it for tokens.
+        log("Detectado código en URL. Limpiando historial...");
+        // Limpiamos la URL para que el código no se procese dos veces si el usuario da atrás/adelante
+        web.window.history.replaceState(null, '', web.window.location.pathname);
+        // We have the code! Exchange it for tokens.
         authProv.exchangeCodeForTokens(code);
       }
       else if (authProv.userEmail == null && !authProv.isProcessing) {
-        // 2. SOLO REDIRIGE si no hay usuario Y no estamos procesando nada
+        // SOLO REDIRIGE si no hay usuario Y no estamos procesando nada
         authProv.launchLogin();
       }
     });
