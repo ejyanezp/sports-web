@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:sports/auth_provider.dart';
+import 'package:sports/providers/auth_provider.dart';
 
 class TopBar extends StatelessWidget {
   final bool isMobile;
@@ -35,7 +35,7 @@ class TopBar extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          Text('Hola, $authProv.userEmail! 👋',
+          Text('Hola, ${authProv.userEmail!} 👋',
             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600,),
           ),
 

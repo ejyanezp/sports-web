@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:sports/auth_provider.dart';
+import 'package:sports/providers/auth_provider.dart';
 
 class SideNav extends StatelessWidget {
   final bool isCollapsed; // para tablet

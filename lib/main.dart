@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:sports/config/env_config.dart';
-import 'package:sports/auth_provider.dart';
+import 'package:sports/providers/auth_provider.dart';
+import 'package:sports/providers/sports_provider.dart';
+import 'package:sports/services/api_service.dart';
+import 'package:sports/services/rest_driver.dart';
 import 'package:sports/utils/app_metadata.dart';
 import 'package:sports/app/app_router.dart';
 
@@ -27,7 +30,21 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider())
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ProxyProvider<AuthProvider, ApiService>(
+          update: (_, auth, _) {
+            final rest = RestDriver(
+              baseUrl: EnvConfig.apiBaseUrl,
+              getToken: () => auth.idToken,
+            );
+            return ApiService(rest: rest);
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SportsProvider(
+            api: Provider.of<ApiService>(context, listen: false),
+          ),
+        ),
       ],
       child: const MyApp()
     )

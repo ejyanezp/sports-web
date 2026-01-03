@@ -14,6 +14,10 @@ class AuthProvider extends ChangeNotifier {
   String? _userEmail;
   bool _isProcessing = false;
   String? _errorMessage;
+  // para enviarlo en el header Authorization de las llamadas a los APIs.
+  String? _idToken;
+
+  String? get idToken => _idToken;
 
   // Clave para el almacenamiento
   final String _storageKey = 'sports_id_token';
@@ -34,8 +38,8 @@ class AuthProvider extends ChangeNotifier {
   void _loadPersistedToken() {
     log("Buscando token en sessionStorage...");
     final savedToken = web.window.sessionStorage.getItem(_storageKey);
-
     if (savedToken != null) {
+      _idToken = savedToken;
       _userEmail = _decodeEmailFromToken(savedToken);
       if (_userEmail != null) {
         log("✅ Usuario recuperado con éxito: $_userEmail");
@@ -59,7 +63,8 @@ class AuthProvider extends ChangeNotifier {
       if (parts.length != 3) return null;
       final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
       return json.decode(payload)['email'];
-    } catch (e) {
+    }
+    catch (e) {
       return null;
     }
   }
@@ -130,6 +135,7 @@ class AuthProvider extends ChangeNotifier {
         final idToken = data['id_token'] as String;
         // PERSISTENCIA: Guardamos el token crudo
         web.window.sessionStorage.setItem(_storageKey, idToken);
+        _idToken = idToken;
         _userEmail = _decodeEmailFromToken(idToken);
       }
       else {
