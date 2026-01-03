@@ -89,11 +89,14 @@ class AuthProvider extends ChangeNotifier {
     final authUrl = Uri.https(cognitoDomain, '/oauth2/authorize', {
       'client_id': clientId,
       'response_type': 'code',
-      'scope': 'email openid phone',
+      'scope': 'email openid',
       'redirect_uri': redirectUri,
       'code_challenge': challenge,
       'code_challenge_method': 'S256',
     });
+
+    // Processing the login.
+    setProcessing(true);
 
     // Usamos replace para que Cognito no sea un "punto de retorno" (protegernos del botón Atrás del browser)
     // web.window.location.href = authUrl.toString();   <-- Si usamos href cognito es un punto de retorno
@@ -167,5 +170,6 @@ class AuthProvider extends ChangeNotifier {
     // web.window.location.href = logoutUrl.toString();
     web.window.location.replace(logoutUrl.toString());
     web.document.title = "Sports App";
+
   }
 }

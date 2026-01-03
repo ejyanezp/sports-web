@@ -39,6 +39,7 @@ dependencies:
   http: ^1.6.0
   provider: ^6.1.5+1
   package_info_plus: ^9.0.0
+  go_router: ^17.0.1
 
 dev_dependencies:
   flutter_test:
