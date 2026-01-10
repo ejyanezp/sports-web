@@ -17,6 +17,15 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+class DirectoryPage extends StatelessWidget {
+  const DirectoryPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text("DirectoryPage");
+  }
+}
+
 class ChampionshipsPage extends StatelessWidget {
   const ChampionshipsPage({super.key});
 
@@ -45,7 +54,7 @@ class AppRouter {
       final goingToLogin = state.matchedLocation == '/login';
       if (processing) return null;
       if (!loggedIn && !goingToLogin) return '/login';
-      if (loggedIn && goingToLogin) return '/';
+      if (loggedIn && goingToLogin) return '/home';
       return null;
     },
 
@@ -62,7 +71,15 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/',
+            redirect: (_, _) => '/home',
+          ),
+          GoRoute(
+            path: '/home',
             builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: '/directory',
+            builder: (context, state) => const DirectoryPage(),
           ),
           GoRoute(
             path: '/sports',

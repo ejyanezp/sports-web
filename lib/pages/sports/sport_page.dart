@@ -123,7 +123,7 @@ class _SportsPageState extends State<SportsPage> {
                 if (isEdit) {
                   await prov.updateSport(newSport);
                 } else {
-                  await prov.addSport(newSport);
+                  await prov.createSport(newSport);
                 }
 
                 if (context.mounted) Navigator.pop(context);

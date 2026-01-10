@@ -5,7 +5,7 @@ import 'package:web/web.dart' as web;
 import 'package:provider/provider.dart';
 
 import 'package:sports/providers/auth_provider.dart';
-import 'package:sports/utils/app_metadata.dart';
+import 'package:sports/utils/logs.dart';
 
 class SimpleAuthPage extends StatefulWidget {
   const SimpleAuthPage({super.key});

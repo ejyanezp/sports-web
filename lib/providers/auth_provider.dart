@@ -8,7 +8,7 @@ import 'package:web/web.dart' as web;
 import 'package:http/http.dart' as http;
 
 import 'package:sports/config/env_config.dart';
-import 'package:sports/utils/app_metadata.dart';
+import 'package:sports/utils/logs.dart';
 
 class AuthProvider extends ChangeNotifier {
   String? _userEmail;
@@ -137,6 +137,7 @@ class AuthProvider extends ChangeNotifier {
         web.window.sessionStorage.setItem(_storageKey, idToken);
         _idToken = idToken;
         _userEmail = _decodeEmailFromToken(idToken);
+        notifyListeners();
       }
       else {
         log("Error en Cognito: ${response.body}");

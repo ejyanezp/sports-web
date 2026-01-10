@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:sports/models/sport.dart';
+import 'package:sports/utils/logs.dart';
 
 typedef TokenProvider = String? Function();
 
@@ -12,7 +13,7 @@ class RestDriver {
   RestDriver({
     required this.baseUrl,
     required this.getToken,
-    http.Client? client,
+    http.Client? client
   }) : client = client ?? http.Client();
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
@@ -25,18 +26,29 @@ class RestDriver {
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
+    // log("Authorization: ${headers['Authorization']}");
     return headers;
   }
 
   Future<List<Sport>> getSports() async {
-    final resp = await client.get(_uri('/sports'), headers: _headers());
+    log("RestDriver.getSports URL=$baseUrl");
+    try {
+      final resp = await client.get(_uri('/sports'), headers: _headers());
+      log("resp = ${resp.statusCode}");
+      if (resp.statusCode != 200) {
+        throw Exception('Error getting sports: ${resp.statusCode}');
+      }
 
-    if (resp.statusCode != 200) {
-      throw Exception('Error getting sports: ${resp.statusCode}');
+      final List<dynamic> data = json.decode(resp.body);
+      return data.map((e) => Sport.fromJson(e as Map<String, dynamic>)).toList();
     }
-
-    final List<dynamic> data = json.decode(resp.body);
-    return data.map((e) => Sport.fromJson(e as Map<String, dynamic>)).toList();
+    catch (e) {
+      log("exception = ${e.toString()}");
+    }
+    finally {
+      log("RestDriver.getSports finalizado");
+    }
+    return [];
   }
 
   Future<Sport> createSport(Sport sport) async {

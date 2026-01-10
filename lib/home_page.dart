@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:sports/widgets/topbar.dart';
 import 'package:sports/widgets/side_nav.dart';
+import 'package:sports/widgets/canvas_area.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.child});
@@ -43,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     TopBar(isMobile: isMobile,
                       onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
                     ),
-                    Expanded(child: widget.child),
+                    Expanded(child: CanvasArea(child: widget.child)),
                   ],
                 ),
               ),

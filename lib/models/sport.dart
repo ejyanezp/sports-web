@@ -1,11 +1,17 @@
 class Sport {
-  final String name;       // key
-  final String? logoId;    // optional
+  String _name;       // key
+  String? _logoId;    // optional
+
+  String get name => _name;
+  String? get logoId => _logoId;
+
+  void setName(String name) { _name = name; }
+  void setLogoId(String? logoId) {_logoId = logoId; }
 
   Sport({
-    required this.name,
-    this.logoId,
-  });
+    required String name,
+    String? logoId,
+  }) : _name = name, _logoId = logoId;
 
   Sport copyWith({String? name, String? logoId}) {
     return Sport(
