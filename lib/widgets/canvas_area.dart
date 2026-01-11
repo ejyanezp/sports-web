@@ -8,7 +8,7 @@ class CanvasArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Color(0xFF0D1117),
       child: child,   // ← AQUÍ SE MUESTRA LA PÁGINA ACTUAL
     );
   }

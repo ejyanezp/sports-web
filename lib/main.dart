@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:sports/config/env_config.dart';
 import 'package:sports/providers/auth_provider.dart';
@@ -7,8 +8,6 @@ import 'package:sports/services/api_service.dart';
 import 'package:sports/services/rest_driver.dart';
 import 'package:sports/utils/logs.dart';
 import 'package:sports/app/app_router.dart';
-
-import 'package:provider/provider.dart';
 
 /*
 Execute in LOCALHOST as

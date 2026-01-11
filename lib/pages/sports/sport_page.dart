@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/sport.dart';
-import '../../providers/sports_provider.dart';
+
+import 'package:sports/models/sport.dart';
+import 'package:sports/providers/sports_provider.dart';
 
 class SportsPage extends StatefulWidget {
   const SportsPage({super.key});
@@ -23,30 +24,19 @@ class _SportsPageState extends State<SportsPage> {
   Widget build(BuildContext context) {
     final sportsProv = context.watch<SportsProvider>();
 
+    // 1. Manejo de estados de carga y error sin Scaffold extra
     if (sportsProv.loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (sportsProv.error != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Sports')),
-        body: Center(child: Text(sportsProv.error!)),
-      );
+      return Center(child: Text(sportsProv.error!));
     }
 
     final sports = sportsProv.sports;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sports'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openSportDialog(context),
-        child: const Icon(Icons.add),
-      ),
-      body: ListView.builder(
+    return Stack(children: [
+      ListView.builder(padding: const EdgeInsets.all(16),
         itemCount: sports.length,
         itemBuilder: (context, index) {
           final sport = sports[index];
@@ -74,7 +64,16 @@ class _SportsPageState extends State<SportsPage> {
           );
         },
       ),
-    );
+      // Posicionamos el botón manualmente ya que no hay Scaffold interno
+      Positioned(
+        bottom: 24,
+        right: 24,
+        child: FloatingActionButton(
+          onPressed: () => _openSportDialog(context),
+          child: const Icon(Icons.add),
+        ),
+      ),
+    ]);
   }
 
   void _openSportDialog(BuildContext context, {Sport? sport}) {

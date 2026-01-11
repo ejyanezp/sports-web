@@ -106,7 +106,7 @@ class AuthProvider extends ChangeNotifier {
     // Usamos replace para que Cognito no sea un "punto de retorno" (protegernos del botón Atrás del browser)
     // web.window.location.href = authUrl.toString();   <-- Si usamos href cognito es un punto de retorno
     web.window.location.replace(authUrl.toString());
-    web.document.title = "Sports App";
+    web.document.title = "Challengers App";
   }
 
   Future<void> exchangeCodeForTokens(String code) async {
@@ -166,17 +166,19 @@ class AuthProvider extends ChangeNotifier {
     web.window.sessionStorage.removeItem('pkce_verifier');
     // 3. Notificamos a los widgets (esto mostrará el reloj de arena brevemente)
     notifyListeners();
-    // 4. REDIRECCIÓN AL SERVIDOR DE COGNITO
-    // Usamos el endpoint /logout oficial de AWS
+    // Redirige inmediatamente a /login (SPA)
+    if (kIsWeb) {
+      web.window.history.replaceState(null, '', '/login');
+      web.document.title = "Challengers App";
+    }
+    // Logout real en Cognito (asíncrono)
     final logoutUrl = Uri.https(cognitoDomain, '/logout', {
       'client_id': clientId,
-      'logout_uri': redirectUri, // DEBE estar en la lista de 'Allowed logout URLs' en la consola de AWS
+      'logout_uri': redirectUri,
     });
-    // 5. El navegador viaja a AWS, AWS cierra sesión y nos devuelve a la App
-    // Do not use href, do not feed the browsers history in an SPA app.
-    // web.window.location.href = logoutUrl.toString();
-    web.window.location.replace(logoutUrl.toString());
-    web.document.title = "Sports App";
-
+    // No bloquea la UX
+    Future.microtask(() {
+      web.window.location.replace(logoutUrl.toString());
+    });
   }
 }

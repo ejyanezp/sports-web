@@ -55,7 +55,7 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
         // SOLO REDIRIGE si no hay usuario Y no estamos procesando nada
         authProv.launchLogin();
       }
-      web.document.title = "Sports App";
+      web.document.title = "Challengers App";
     });
   }
 
@@ -68,7 +68,7 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
       // Usuario autenticado → navegar a la app
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        context.go('/');
+        context.goNamed('Home');
       });
       return const SizedBox.shrink();
     }

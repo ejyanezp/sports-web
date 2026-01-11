@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:go_router/go_router.dart';
 
 import 'package:sports/widgets/topbar.dart';
 import 'package:sports/widgets/side_nav.dart';
@@ -6,6 +7,7 @@ import 'package:sports/widgets/canvas_area.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.child});
+  // final GoRouterState state;
   final Widget child;
 
   @override
@@ -43,6 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     TopBar(isMobile: isMobile,
                       onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      isCollapsed: false,
                     ),
                     Expanded(child: CanvasArea(child: widget.child)),
                   ],
