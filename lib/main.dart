@@ -12,10 +12,8 @@ import 'package:sports/app/app_router.dart';
 /*
 Execute in LOCALHOST as
 flutter run -d chrome --web-port 8088 \
-  --dart-define=COGNITO_CLIENT_ID=24kod6v45jbijpb2v1tnpkrsg7 \
-  --dart-define=COGNITO_DOMAIN=us-east-1pemnvgmyy.auth.us-east-1.amazoncognito.com \
-  --dart-define=REDIRECT_URI=http://localhost:8088/ \
-  --dart-define=API_BASE_URL=https://o7l08961xb.execute-api.us-east-1.amazonaws.com/dev
+  --dart-define=variables... ...
+  See internal documentation.
 Made with Flutter 3.38.5 / Date: 12/31/2025
 */
 void main() async {
