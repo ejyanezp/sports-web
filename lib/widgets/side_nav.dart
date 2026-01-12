@@ -58,7 +58,7 @@ class SideNav extends StatelessWidget {
                     isActive: location.startsWith('/sports'),
                     onTap: () {
                       context.goNamed('Sports');
-                      context.read<SportsProvider>().loadSports();
+                      // context.read<SportsProvider>().loadSports();
                     },
                   ),
                   NavItem(

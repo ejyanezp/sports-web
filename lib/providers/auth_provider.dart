@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-
 import 'dart:convert';
 import 'dart:math';
 
@@ -11,106 +10,153 @@ import 'package:sports/config/env_config.dart';
 import 'package:sports/utils/logs.dart';
 
 class AuthProvider extends ChangeNotifier {
+  // Estado interno
+  Map<String, dynamic> _tokens = {};
+
   String? _userEmail;
   bool _isProcessing = false;
   String? _errorMessage;
-  // para enviarlo en el header Authorization de las llamadas a los APIs.
-  String? _idToken;
 
-  String? get idToken => _idToken;
+  // Clave única para todo el objeto
+  final String _storageKey = 'auth_tokens';
 
-  // Clave para el almacenamiento
-  final String _storageKey = 'sports_id_token';
-
+  // Configuración Cognito
   final String clientId = EnvConfig.clientId;
   final String cognitoDomain = EnvConfig.cognitoDomain;
   final String redirectUri = EnvConfig.redirectUri;
 
-  // Getters para que los widgets lean el estado
+  // ------------------------------------------------------------
+  // Getters públicos
+  // ------------------------------------------------------------
+  String? get idToken => _tokens["id_token"];
+  String? get accessToken => _tokens["access_token"];
+  String? get refreshToken => _tokens["refresh_token"];
+  int? get expiresIn => _tokens["expires_in"];
+  int? get issuedAt => _tokens["issued_at"];
+
   String? get userEmail => _userEmail;
   bool get isProcessing => _isProcessing;
   String? get errorMessage => _errorMessage;
 
   AuthProvider() {
-    _loadPersistedToken();
+    _loadPersistedTokens();
   }
 
-  void _loadPersistedToken() {
-    log("Buscando token en sessionStorage...");
-    final savedToken = web.window.sessionStorage.getItem(_storageKey);
-    if (savedToken != null) {
-      _idToken = savedToken;
-      _userEmail = _decodeEmailFromToken(savedToken);
-      if (_userEmail != null) {
-        log("✅ Usuario recuperado con éxito: $_userEmail");
-      }
-      else {
-        log("⚠️ Token encontrado pero corrupto o inválido.");
-        web.window.sessionStorage.removeItem(_storageKey);
-      }
+  // ------------------------------------------------------------
+  // Cargar sesión desde sessionStorage
+  // ------------------------------------------------------------
+  void _loadPersistedTokens() {
+    log("Buscando auth_tokens en sessionStorage...");
+
+    final raw = web.window.sessionStorage.getItem(_storageKey);
+    if (raw == null) {
+      log("ℹ️ No hay sesión previa.");
+      return;
     }
-    else {
-      log("ℹ️ No hay sesión previa. Usuario anónimo.");
+
+    _tokens = jsonDecode(raw);
+
+    if (idToken == null) {
+      log("⚠️ auth_tokens encontrado pero sin id_token. Limpiando...");
+      logout();
+      return;
     }
-    // No llamamos a notifyListeners aquí porque el constructor
-    // se ejecuta antes de que los widgets escuchen.
+
+    final payload = _decodePayload(idToken!);
+    _userEmail = payload?["email"];
+
+    if (_userEmail == null) {
+      log("⚠️ id_token corrupto o inválido. Limpiando...");
+      logout();
+      return;
+    }
+
+    if (isExpired()) {
+      log("⚠️ Token expirado al iniciar. Cerrando sesión.");
+      logout();
+      return;
+    }
+
+    log("✅ Sesión restaurada: $_userEmail");
   }
 
-  // Extraemos la lógica de decodificación para reusarla
-  String? _decodeEmailFromToken(String token) {
+  // ------------------------------------------------------------
+  // Decodificar JWT
+  // ------------------------------------------------------------
+  Map<String, dynamic>? _decodePayload(String token) {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return null;
-      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-      return json.decode(payload)['email'];
-    }
-    catch (e) {
+
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+
+      return json.decode(payload);
+    } catch (_) {
       return null;
     }
   }
 
-  // Métodos para cambiar el estado
-  void setProcessing(bool value) {
-    _isProcessing = value;
-    notifyListeners(); // Esto avisa a todos los widgets que deben redibujarse
+  // ------------------------------------------------------------
+  // Validar expiración usando issued_at + expires_in
+  // ------------------------------------------------------------
+  bool isExpired() {
+    log("⚠️ Verificando si el token expiró...");
+    if (expiresIn == null || issuedAt == null) {
+      log("Token no adquirido aun!");
+      return true;
+    }
+    log("Token obtenido!");
+    final expiresAtMs = (issuedAt! + expiresIn!) * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    bool expired = now >= expiresAtMs;
+    if (expired) {
+      log("Token expirado!");
+    }
+    else {
+      log("Token vigente!");
+    }
+    return expired;
   }
 
-  void setUser(String? email) {
-    _userEmail = email;
-    _isProcessing = false;
-    notifyListeners();
-  }
-
+  // ------------------------------------------------------------
+  // Login con PKCE
+  // ------------------------------------------------------------
   void launchLogin() {
     final random = Random.secure();
     final values = List<int>.generate(32, (_) => random.nextInt(256));
-    final verifier = base64UrlEncode(values).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+    final verifier = base64UrlEncode(values)
+        .replaceAll('=', '')
+        .replaceAll('+', '-')
+        .replaceAll('/', '_');
 
     web.window.sessionStorage.setItem('pkce_verifier', verifier);
 
-    final challenge = base64UrlEncode(sha256.convert(utf8.encode(verifier)).bytes)
-        .replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+    final challenge = base64UrlEncode(
+      sha256.convert(utf8.encode(verifier)).bytes,
+    ).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 
     final authUrl = Uri.https(cognitoDomain, '/oauth2/authorize', {
       'client_id': clientId,
       'response_type': 'code',
-      'scope': 'email openid',
+      'scope': 'openid email', // luego agregaremos scopes personalizados
       'redirect_uri': redirectUri,
       'code_challenge': challenge,
       'code_challenge_method': 'S256',
     });
 
-    // Processing the login.
     setProcessing(true);
-
-    // Usamos replace para que Cognito no sea un "punto de retorno" (protegernos del botón Atrás del browser)
-    // web.window.location.href = authUrl.toString();   <-- Si usamos href cognito es un punto de retorno
     web.window.location.replace(authUrl.toString());
     web.document.title = "Challengers App";
   }
 
+  // ------------------------------------------------------------
+  // Intercambiar code por tokens
+  // ------------------------------------------------------------
   Future<void> exchangeCodeForTokens(String code) async {
     _errorMessage = null;
+
     final verifier = web.window.sessionStorage.getItem('pkce_verifier');
     if (verifier == null) {
       setProcessing(false);
@@ -132,53 +178,106 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final idToken = data['id_token'] as String;
-        // PERSISTENCIA: Guardamos el token crudo
-        web.window.sessionStorage.setItem(_storageKey, idToken);
-        _idToken = idToken;
-        _userEmail = _decodeEmailFromToken(idToken);
+
+        // Guardamos TODO el objeto
+        data["issued_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        _tokens = data;
+
+        web.window.sessionStorage.setItem(_storageKey, jsonEncode(_tokens));
+
+        final payload = _decodePayload(idToken!);
+        _userEmail = payload?["email"];
+
         notifyListeners();
-      }
-      else {
-        log("Error en Cognito: ${response.body}");
-        // Capturamos el error específico de Cognito (ej: "invalid_grant")
+      } else {
         final errorData = json.decode(response.body);
-        _errorMessage = errorData['error'] ?? "Error desconocido en el servidor";
+        _errorMessage = errorData['error'] ?? "Error desconocido";
       }
-    }
-    catch (e) {
-      _errorMessage = "Error de conexión. Revisa tu internet.";
-      log(_errorMessage!);
-    }
-    finally {
+    } catch (e) {
+      _errorMessage = "Error de conexión.";
+    } finally {
       setProcessing(false);
     }
   }
 
+  Future<bool> refreshTokens() async {
+    if (refreshToken == null) return false;
+
+    try {
+      final response = await http.post(
+        Uri.https(cognitoDomain, '/oauth2/token'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'grant_type': 'refresh_token',
+          'client_id': clientId,
+          'refresh_token': refreshToken!,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // Cognito NO devuelve refresh_token en este flujo
+        data["refresh_token"] = refreshToken;
+
+        data["issued_at"] = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+        _tokens = data;
+        web.window.sessionStorage.setItem(_storageKey, jsonEncode(_tokens));
+
+        notifyListeners();
+        return true;
+      }
+    }
+    catch (_) {}
+
+    return false;
+  }
+
+  Future<String?> ensureValidAccessToken() async {
+    if (!isExpired()) return accessToken;
+
+    final ok = await refreshTokens();
+    if (ok) return accessToken;
+
+    logout();
+    return null;
+  }
+
+  // ------------------------------------------------------------
+  // Logout
+  // ------------------------------------------------------------
   void logout() {
-    // 1. Limpiamos los datos locales primero
+    _tokens = {};
     _userEmail = null;
     _isProcessing = false;
     _errorMessage = null;
-    // LIMPIEZA: Borramos el token persistido
+
     web.window.sessionStorage.removeItem(_storageKey);
-    // 2. Limpiamos el verifier de la sesión para seguridad
     web.window.sessionStorage.removeItem('pkce_verifier');
-    // 3. Notificamos a los widgets (esto mostrará el reloj de arena brevemente)
+
     notifyListeners();
-    // Redirige inmediatamente a /login (SPA)
+
     if (kIsWeb) {
       web.window.history.replaceState(null, '', '/login');
       web.document.title = "Challengers App";
     }
-    // Logout real en Cognito (asíncrono)
+
     final logoutUrl = Uri.https(cognitoDomain, '/logout', {
       'client_id': clientId,
       'logout_uri': redirectUri,
     });
-    // No bloquea la UX
+
     Future.microtask(() {
       web.window.location.replace(logoutUrl.toString());
     });
+  }
+
+  // ------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------
+  void setProcessing(bool value) {
+    _isProcessing = value;
+    notifyListeners();
   }
 }

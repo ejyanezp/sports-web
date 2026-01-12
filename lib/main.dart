@@ -35,7 +35,10 @@ void main() async {
           update: (_, auth, _) {
             return RestDriver(
               baseUrl: EnvConfig.apiBaseUrl,
-              getToken: () => auth.idToken,
+              // Se debe pasar una función al token y no el valor del token, porque el mismo podría cambiar.
+              // Ejemplo: después de aplicar el refresh token.
+              // Se usa el access token para implementar autorizaciones.
+                getToken: () => auth.ensureValidAccessToken(),
             );
           },
         ),
@@ -46,17 +49,12 @@ void main() async {
         ),
 
         ChangeNotifierProxyProvider<ApiService, SportsProvider>(
-          create: (_) => SportsProvider(api: ApiService(rest: RestDriver(
-            baseUrl: '',
-            getToken: () => null,
-          ))), // placeholder, nunca se usa
+          create: (_) => SportsProvider(api: null),
           update: (_, api, previous) {
-            return previous == null
-                ? SportsProvider(api: api)
-                : SportsProvider(api: api);
+            previous?.setApi(api);
+            return previous!;
           },
         ),
-
       ],
       child: const MyApp()
     )
@@ -71,7 +69,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: AppRouter.router,
-      title: 'Sports App',
+      title: 'Challengers App',
       theme: ThemeData.dark(),
     );
   }

@@ -131,6 +131,10 @@ class AppRouter {
       final goingToLogin = state.matchedLocation == '/login';
       if (processing) return null;
       if (!loggedIn && !goingToLogin) return '/login';
+      if (authProv.isExpired() && !goingToLogin) {
+        authProv.logout(); // opcional pero recomendable
+        return '/login';
+      }
       if (loggedIn && goingToLogin) return '/';
       return null;
     },

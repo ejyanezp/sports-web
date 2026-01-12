@@ -28,7 +28,7 @@ void log(String message) {
         "${now.second.toString().padLeft(2, '0')}."
         "${now.millisecond.toString().padLeft(3, '0')}";
 
-    print('🦁 [$timestamp] [${AppMetadata.fullVersion}] [Auth-Lion]: $message');
+    print('🦁 [$timestamp] [${AppMetadata.fullVersion}]: $message');
     return true;
   }());
 }

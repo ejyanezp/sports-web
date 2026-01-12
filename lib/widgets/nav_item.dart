@@ -7,7 +7,7 @@ class NavItem extends StatefulWidget {
   final bool isActive;
   final VoidCallback? onTap;
 
-  const NavItem({
+  const NavItem({super.key,
     required this.icon,
     required this.label,
     required this.isCollapsed,

@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:sports/models/sport.dart';
 import 'package:sports/utils/logs.dart';
 
-typedef TokenProvider = String? Function();
+// Se debe pasar una función al token y no el valor del token, porque el mismo podría cambiar.
+// Ejemplo: después de aplicar el refresh token.
+typedef TokenProvider = Future<String?> Function();
 
 class RestDriver {
   final String baseUrl;
@@ -18,8 +20,8 @@ class RestDriver {
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
 
-  Map<String, String> _headers() {
-    final token = getToken();
+  Future<Map<String, String>> _headers() async {
+    final token = await getToken();
     final headers = <String, String>{
       'Content-Type': 'application/json',
     };
@@ -33,7 +35,7 @@ class RestDriver {
   Future<List<Sport>> getSports() async {
     log("RestDriver.getSports URL=$baseUrl");
     try {
-      final resp = await client.get(_uri('/sports'), headers: _headers());
+      final resp = await client.get(_uri('/sports'), headers: await _headers());
       log("resp = ${resp.statusCode}");
       if (resp.statusCode != 200) {
         throw Exception('Error getting sports: ${resp.statusCode}');
@@ -54,7 +56,7 @@ class RestDriver {
   Future<Sport> createSport(Sport sport) async {
     final resp = await client.post(
       _uri('/sports'),
-      headers: _headers(),
+      headers: await _headers(),
       body: json.encode(sport.toJson()),
     );
 
@@ -68,7 +70,7 @@ class RestDriver {
   Future<Sport> updateSport(Sport sport) async {
     final resp = await client.put(
       _uri('/sports/${sport.name}'),
-      headers: _headers(),
+      headers: await _headers(),
       body: json.encode(sport.toJson()),
     );
 
@@ -82,7 +84,7 @@ class RestDriver {
   Future<void> deleteSport(String name) async {
     final resp = await client.delete(
       _uri('/sports/$name'),
-      headers: _headers(),
+      headers: await _headers(),
     );
 
     if (resp.statusCode != 204) {
