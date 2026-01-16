@@ -91,4 +91,24 @@ class RestDriver {
       throw Exception('Error deleting sport: ${resp.statusCode}');
     }
   }
+
+  Future<Map<String, bool>> getEntitlements() async {
+    log("RestDriver.getEntitlements");
+    try {
+      final resp = await client.get(_uri('/entitlements'), headers: await _headers());
+      log("getEntitlements resp = ${resp.statusCode}");
+      if (resp.statusCode != 200) {
+        throw Exception('Error getting sports: ${resp.statusCode}');
+      }
+      final Map<String, dynamic> data = json.decode(resp.body);
+      return data.map((key, value) => MapEntry(key, value as bool));
+    }
+    catch (e) {
+      log("exception = ${e.toString()}");
+    }
+    finally {
+      log("RestDriver.getSports finalizado");
+    }
+    return {};
+  }
 }

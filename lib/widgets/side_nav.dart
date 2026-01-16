@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'package:sports/providers/sports_provider.dart';
 import 'package:sports/widgets/nav_item.dart';
+import 'package:sports/providers/entitlements.dart';
 
 class SideNav extends StatelessWidget {
   final bool isCollapsed; // para tablet
@@ -15,7 +15,12 @@ class SideNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final authProv = context.read<AuthProvider>();
+    final entitlements = context.watch<Entitlements>();
+
+    if (!entitlements.isLoaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final location = GoRouterState.of(context).uri.toString();
 
     return Container(

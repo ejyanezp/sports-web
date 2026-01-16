@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-// import 'package:go_router/go_router.dart';
 
 import 'package:sports/widgets/topbar.dart';
 import 'package:sports/widgets/side_nav.dart';
 import 'package:sports/widgets/canvas_area.dart';
+import 'package:sports/utils/logs.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.child});
@@ -19,6 +19,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    log("MyHomePage.build");
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isMobile = constraints.maxWidth < 700;

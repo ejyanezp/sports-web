@@ -8,6 +8,7 @@ import 'package:sports/services/api_service.dart';
 import 'package:sports/services/rest_driver.dart';
 import 'package:sports/utils/logs.dart';
 import 'package:sports/app/app_router.dart';
+import 'package:sports/providers/entitlements.dart';
 
 /*
 Execute in LOCALHOST as
@@ -55,7 +56,16 @@ void main() async {
             return previous!;
           },
         ),
+
+        ChangeNotifierProxyProvider<ApiService, Entitlements>(
+          create: (_) => Entitlements(),
+          update: (_, api, ent) {
+            ent!.setApi(api);
+            return ent;
+          },
+        ),
       ],
+
       child: const MyApp()
     )
   );

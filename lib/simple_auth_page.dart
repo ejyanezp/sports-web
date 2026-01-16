@@ -5,7 +5,9 @@ import 'package:web/web.dart' as web;
 import 'package:provider/provider.dart';
 
 import 'package:sports/providers/auth_provider.dart';
+import 'package:sports/providers/entitlements.dart';
 import 'package:sports/utils/logs.dart';
+
 
 class SimpleAuthPage extends StatefulWidget {
   const SimpleAuthPage({super.key});
@@ -23,8 +25,11 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
 
   void _checkAuthStatus() {
     final authProv = context.read<AuthProvider>();
+    final entitlements = context.read<Entitlements>();
+
     // Si ya tenemos el email (recuperado de persistencia)
     if (authProv.userEmail != null) {
+      log("<< authProv.userEmail != null");
       // SEGURO DE HISTORIAL: Si ya hay sesión, limpiamos cualquier residuo en la URL
       // y detenemos cualquier ejecución posterior. (Protección contra botón Atrás del browser)
       if (web.window.location.search.contains('code=')) {
@@ -34,12 +39,18 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
       return;
     }
 
+    log(">> authProv.userEmail == null");
     final uri = Uri.parse(web.window.location.href);
     final code = uri.queryParameters['code'];
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Verificamos que el widget todavía exista en pantalla antes de actuar
-      if (!mounted) return;
+      if (!mounted) {
+        log("Widget no está en pantalla. Cancelando...");
+        return;
+      }
+
+      log("Widget en pantalla");
 
       if (code != null && !authProv.isProcessing) {
         log("Detectado código en URL. Limpiando historial...");
@@ -49,7 +60,11 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
         // Limpiamos el título del Tab explícitamente
         log("✅ Intercambio exitoso. URL e Historial saneados.");
         // We have the code! Exchange it for tokens.
-        authProv.exchangeCodeForTokens(code);
+        await authProv.exchangeCodeForTokens(code);
+        //Cargamos permisos
+        log("Cargando permisos...");
+        await entitlements.load();
+        log("Permisos cargados");
       }
       else if (authProv.userEmail == null && !authProv.isProcessing) {
         // SOLO REDIRIGE si no hay usuario Y no estamos procesando nada
@@ -68,6 +83,7 @@ class _SimpleAuthPageState extends State<SimpleAuthPage> {
       // Usuario autenticado → navegar a la app
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        log('Going home page');
         context.goNamed('Home');
       });
       return const SizedBox.shrink();

@@ -38,6 +38,26 @@ class AuthProvider extends ChangeNotifier {
   bool get isProcessing => _isProcessing;
   String? get errorMessage => _errorMessage;
 
+  String get groupName {
+    final raw = _tokens["cognito:groups"];
+
+    if (raw == null) return "";
+
+    // Caso 1: ya es lista
+    if (raw is List) {
+      return raw.isNotEmpty ? raw.first : "";
+    }
+
+    // Caso 2: es string tipo "[admin]"
+    if (raw is String) {
+      final clean = raw.replaceAll("[", "").replaceAll("]", "").trim();
+      final parts = clean.split(",");
+      return parts.isNotEmpty ? parts.first.trim() : "";
+    }
+
+    return "";
+  }
+
   AuthProvider() {
     _loadPersistedTokens();
   }
@@ -140,7 +160,9 @@ class AuthProvider extends ChangeNotifier {
     final authUrl = Uri.https(cognitoDomain, '/oauth2/authorize', {
       'client_id': clientId,
       'response_type': 'code',
-      'scope': 'openid email', // luego agregaremos scopes personalizados
+      'scope': 'openid email '
+          'urn:challengers:api/sports.read '
+          'urn:challengers:api/sports.write',
       'redirect_uri': redirectUri,
       'code_challenge': challenge,
       'code_challenge_method': 'S256',
@@ -184,18 +206,25 @@ class AuthProvider extends ChangeNotifier {
         _tokens = data;
 
         web.window.sessionStorage.setItem(_storageKey, jsonEncode(_tokens));
+        log("Access token ${_tokens["access_token"]}");
 
         final payload = _decodePayload(idToken!);
+        log("Payload = $payload");
         _userEmail = payload?["email"];
 
+        log("✅ Sesión iniciada: $_userEmail");
+
         notifyListeners();
-      } else {
+      }
+      else {
         final errorData = json.decode(response.body);
         _errorMessage = errorData['error'] ?? "Error desconocido";
       }
-    } catch (e) {
+    }
+    catch (e) {
       _errorMessage = "Error de conexión.";
-    } finally {
+    }
+     finally {
       setProcessing(false);
     }
   }

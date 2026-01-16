@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:sports/models/sport.dart';
 import 'package:sports/providers/sports_provider.dart';
+import 'package:sports/providers/entitlements.dart';
 
 class SportsPage extends StatefulWidget {
   const SportsPage({super.key});
@@ -23,11 +24,14 @@ class _SportsPageState extends State<SportsPage> {
   @override
   Widget build(BuildContext context) {
     final sportsProv = context.watch<SportsProvider>();
+    final entitlements = context.watch<Entitlements>();
 
     // 1. Manejo de estados de carga y error sin Scaffold extra
-    if (sportsProv.loading) {
+    if (sportsProv.loading || !entitlements.isLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final canWrite = entitlements.can("sports.write");
 
     if (sportsProv.error != null) {
       return Center(child: Text(sportsProv.error!));
@@ -47,7 +51,7 @@ class _SportsPageState extends State<SportsPage> {
             ),
             title: Text(sport.name),
             subtitle: Text(sport.logoId ?? 'No logo'),
-            trailing: Row(
+            trailing: canWrite? Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
@@ -60,7 +64,7 @@ class _SportsPageState extends State<SportsPage> {
                       context.read<SportsProvider>().deleteSport(sport.name),
                 ),
               ],
-            ),
+            ) : null,
           );
         },
       ),
