@@ -1,34 +1,37 @@
 class Sport {
+  static final String defaultLogoUrl = "default-logo.png";
+
+  @override
   String _name;       // key
-  String? _logoId;    // optional
+  String? _logoUrl;    // optional
 
   String get name => _name;
-  String? get logoId => _logoId;
+  String? get logoUrl => _logoUrl;
 
   void setName(String name) { _name = name; }
-  void setLogoId(String? logoId) {_logoId = logoId; }
+  void setLogoId(String? logoUrl) {_logoUrl = logoUrl; }
 
   Sport({
     required String name,
-    String? logoId,
-  }) : _name = name, _logoId = logoId;
+    String? logoUrl,
+  }) : _name = name, _logoUrl = logoUrl?? defaultLogoUrl;
 
-  Sport copyWith({String? name, String? logoId}) {
+  Sport copyWith({String? name, String? logoUrl}) {
     return Sport(
       name: name ?? this.name,
-      logoId: logoId ?? this.logoId,
+      logoUrl: logoUrl ?? this.logoUrl,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'name': name,
-    'logoId': logoId,
+    'logoUrl': logoUrl,
   };
 
   factory Sport.fromJson(Map<String, dynamic> json) {
     return Sport(
       name: json['name'],
-      logoId: json['logoId'],
+      logoUrl: json['logoUrl'],
     );
   }
 }

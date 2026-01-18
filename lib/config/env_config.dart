@@ -4,10 +4,13 @@ class EnvConfig {
   static const String cognitoDomain = String.fromEnvironment('COGNITO_DOMAIN', defaultValue: '');
   static const String redirectUri = String.fromEnvironment('REDIRECT_URI', defaultValue: 'http://localhost:8088/');
   static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  static const String cdnBaseUrl = String.fromEnvironment('CDN_BASE_URL', defaultValue: '');
+
 
   // Validación de seguridad para desarrollo
   static void validate() {
-    if (clientId.isEmpty || cognitoDomain.isEmpty || redirectUri.isEmpty) {
+    if (clientId.isEmpty || cognitoDomain.isEmpty || redirectUri.isEmpty ||
+        apiBaseUrl.isEmpty || cdnBaseUrl.isEmpty) {
       throw Exception("Faltan variables de entorno. Asegúrate de usar --dart-define para: "
         "COGNITO_CLIENT_ID, COGNITO_DOMAIN y REDIRECT_URI"
       );

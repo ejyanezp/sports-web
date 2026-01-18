@@ -1,6 +1,7 @@
 import 'package:sports/models/sport.dart';
 import 'rest_driver.dart';
 import 'package:sports/utils/logs.dart';
+import 'package:sports/models/championship.dart';
 
 class ApiService {
   static ApiService? instance;
@@ -28,4 +29,28 @@ class ApiService {
     log("ApiService.getEntitlements");
     return rest.getEntitlements();
   }
+
+  // CHAMPIONSHIPS
+  Future<List<Championship>> getChampionships() {
+    log("ApiService.getChampionships");
+    return rest.getChampionships();
+  }
+
+  Future<List<Championship>> getChampionshipsBySport(String sportName) {
+    log("ApiService.getChampionshipsBySport $sportName");
+    return rest.getChampionshipsBySport(sportName);
+  }
+
+  Future<Championship> createChampionship(Championship ch) {
+    return rest.createChampionship(ch);
+  }
+
+  Future<Championship> updateChampionship(Championship ch) {
+    return rest.updateChampionship(ch);
+  }
+
+  Future<void> deleteChampionship(String id) {
+    return rest.deleteChampionship(id);
+  }
+
 }

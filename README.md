@@ -6,14 +6,14 @@ Flutter project for studying.
 For Development environment hosted in S3 private bucket:
 
 ```bash
-flutter build web --debug --build-number <BUILD NUMBER> --build-name=<BUILD NAME> --pwa-strategy=none -v --dart-define=REDIRECT_URI=https://<AWS CLOUDFRONT CDN ID>.cloudfront.net/ --dart-define=COGNITO_CLIENT_ID=<COGNITO CLIENT ID> --dart-define=COGNITO_DOMAIN=<COGNITO DOMAIN PREFIX>.auth.<AWS REGION ID>.amazoncognito.com --dart-define=API_BASE_URL=<API BASE URL>
+flutter build web --debug --build-number <BUILD NUMBER> --build-name=<BUILD NAME> --pwa-strategy=none -v --dart-define=REDIRECT_URI=https://<AWS CLOUDFRONT CDN ID>.cloudfront.net/ --dart-define=COGNITO_CLIENT_ID=<COGNITO CLIENT ID> --dart-define=COGNITO_DOMAIN=<COGNITO DOMAIN PREFIX>.auth.<AWS REGION ID>.amazoncognito.com --dart-define=API_BASE_URL=<API BASE URL> --dart-define=CDN_BASE_URL=<CDN_BASE_URL>
 ```
 
 For a production release replace --debug by --release.
 
 ## Running locally
 ```bash
-flutter run -d chrome --web-port 8088 --dart-define=COGNITO_CLIENT_ID=<COGNITO CLIENT ID> --dart-define=COGNITO_DOMAIN=<COGNITO DOMAIN PREFIX>.auth.<AWS REGION ID>.amazoncognito.com --dart-define=REDIRECT_URI=http://localhost:8088/ --dart-define=API_BASE_URL=<API BASE URL> 
+flutter run -d chrome --web-port 8088 --dart-define=COGNITO_CLIENT_ID=<COGNITO CLIENT ID> --dart-define=COGNITO_DOMAIN=<COGNITO DOMAIN PREFIX>.auth.<AWS REGION ID>.amazoncognito.com --dart-define=REDIRECT_URI=http://localhost:8088/ --dart-define=API_BASE_URL=<API BASE URL> --dart-define=CDN_BASE_URL=<CDN_BASE_URL> 
 ``` 
 
 ## Deployment to S3

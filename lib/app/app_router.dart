@@ -3,10 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'package:sports/home_page.dart';
+import 'package:sports/pages/championship_page.dart';
 import 'package:sports/simple_auth_page.dart';
 import 'package:sports/providers/auth_provider.dart';
 
-import '../pages/sports/sport_page.dart';
+import '../pages/sport_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -23,15 +24,6 @@ class DirectoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text("DirectoryPage");
-  }
-}
-
-class ChampionshipsPage extends StatelessWidget {
-  const ChampionshipsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text("ChampionshipsPage");
   }
 }
 

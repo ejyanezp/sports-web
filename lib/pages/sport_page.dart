@@ -4,22 +4,32 @@ import 'package:provider/provider.dart';
 import 'package:sports/models/sport.dart';
 import 'package:sports/providers/sports_provider.dart';
 import 'package:sports/providers/entitlements.dart';
+import 'package:sports/services/api_service.dart';
 
-class SportsPage extends StatefulWidget {
+class SportsPage extends StatelessWidget {
   const SportsPage({super.key});
 
   @override
-  State<SportsPage> createState() => _SportsPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) {
+        final prov = SportsProvider(api: context.read<ApiService>());
+        // Ejecutar después del primer frame
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          final safeContext = context;
+          await prov.loadSports();
+          if (!safeContext.mounted) return; // seguridad
+          await prov.preloadLogos(safeContext); // precarga de los logos
+        });
+        return prov;
+      },
+      child: const SportsView(),
+    );
+  }
 }
 
-class _SportsPageState extends State<SportsPage> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SportsProvider>().loadSports();
-    });
-  }
+class SportsView extends StatelessWidget {
+  const SportsView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +37,7 @@ class _SportsPageState extends State<SportsPage> {
     final entitlements = context.watch<Entitlements>();
 
     // 1. Manejo de estados de carga y error sin Scaffold extra
-    if (sportsProv.loading || !entitlements.isLoaded) {
+    if (sportsProv.loading || !sportsProv.logosReady || !entitlements.isLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -46,25 +56,27 @@ class _SportsPageState extends State<SportsPage> {
           final sport = sports[index];
 
           return ListTile(
-            leading: CircleAvatar(
-              child: Text(sport.name.isNotEmpty ? sport.name[0] : '?'),
-            ),
+            leading: sportsProv.logoFor(sport.name) != null
+              ? CircleAvatar(backgroundImage: sportsProv.logoFor(sport.name),)
+              : CircleAvatar(child: Text(sport.name.isNotEmpty ? sport.name[0] : '?'),),
             title: Text(sport.name),
-            subtitle: Text(sport.logoId ?? 'No logo'),
-            trailing: canWrite? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => _openSportDialog(context, sport: sport),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () =>
-                      context.read<SportsProvider>().deleteSport(sport.name),
-                ),
-              ],
-            ) : null,
+            subtitle: Text(sport.logoUrl ?? 'No logo'),
+            trailing: canWrite
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => _openSportDialog(context, sport: sport),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () =>
+                          context.read<SportsProvider>().deleteSport(sport.name),
+                    ),
+                  ],
+                )
+              : null,
           );
         },
       ),
@@ -82,7 +94,7 @@ class _SportsPageState extends State<SportsPage> {
 
   void _openSportDialog(BuildContext context, {Sport? sport}) {
     final nameController = TextEditingController(text: sport?.name ?? '');
-    final logoController = TextEditingController(text: sport?.logoId ?? '');
+    final logoController = TextEditingController(text: sport?.logoUrl ?? '');
 
     showDialog(
       context: context,
@@ -120,7 +132,7 @@ class _SportsPageState extends State<SportsPage> {
 
                 if (name.isEmpty) return;
 
-                final newSport = Sport(name: name, logoId: logoId);
+                final newSport = Sport(name: name, logoUrl: logoId);
                 final prov = context.read<SportsProvider>();
 
                 if (isEdit) {

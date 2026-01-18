@@ -28,7 +28,7 @@ void main() async {
 
   runApp(
     MultiProvider(
-      providers: [
+      providers: [  // providers globales
         ChangeNotifierProvider(create: (_) => AuthProvider()),
 
         // 2. RestDriver depende del token → ProxyProvider
@@ -47,14 +47,6 @@ void main() async {
         // 3. ApiService depende de RestDriver → ProxyProvider
         ProxyProvider<RestDriver, ApiService>(
           update: (_, rest, _) => ApiService(rest: rest),
-        ),
-
-        ChangeNotifierProxyProvider<ApiService, SportsProvider>(
-          create: (_) => SportsProvider(api: null),
-          update: (_, api, previous) {
-            previous?.setApi(api);
-            return previous!;
-          },
         ),
 
         ChangeNotifierProxyProvider<ApiService, Entitlements>(
