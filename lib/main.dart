@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import 'package:sports/config/env_config.dart';
 import 'package:sports/providers/auth_provider.dart';
-import 'package:sports/providers/sports_provider.dart';
 import 'package:sports/services/api_service.dart';
 import 'package:sports/services/rest_driver.dart';
 import 'package:sports/utils/logs.dart';
@@ -18,6 +18,9 @@ flutter run -d chrome --web-port 8088 \
 Made with Flutter 3.38.5 / Date: 12/31/2025
 */
 void main() async {
+  // Esta linea es para ver el layout y depurar los widgets
+  debugPaintSizeEnabled = false;
+
   // Al usar un plugin (como package_info_plus, shared_preferences, o comunicaciones nativas)
   // antes del runApp(), se debe llama a WidgetsFlutterBinding.ensureInitialized()
   WidgetsFlutterBinding.ensureInitialized();

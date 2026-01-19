@@ -61,8 +61,8 @@ Widget _profileMenu(BuildContext context) {
     ),
     onSelected: (value) {
       switch (value) {
-        case 'preferences':
-          context.goNamed('Preferences');
+        case 'configuration':
+          context.goNamed('Configurations');
           break;
         case 'wallets':
           context.goNamed('Wallets');
@@ -73,13 +73,25 @@ Widget _profileMenu(BuildContext context) {
       }
     },
     itemBuilder: (context) => [
-      const PopupMenuItem(
-        value: 'preferences',
-        child: Text('Preferences'),
+      PopupMenuItem(
+        value: 'configuration',
+        child: Row(
+          children: [
+            Icon(Icons.settings, size: 20),
+            const SizedBox(width: 12),
+            const Text('Configuration'),
+          ],
+        ),
       ),
       const PopupMenuItem(
         value: 'wallets',
-        child: Text('Wallets'),
+        child: Row(
+          children: [
+            Icon(Icons.wallet, size: 20),
+            const SizedBox(width: 12),
+            const Text('eWallets'),
+          ],
+        ),
       ),
       const PopupMenuDivider(),
       PopupMenuItem(

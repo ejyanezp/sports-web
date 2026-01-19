@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:sports/home_page.dart';
 import 'package:sports/pages/championship_page.dart';
+import 'package:sports/pages/configurations_page.dart';
 import 'package:sports/simple_auth_page.dart';
 import 'package:sports/providers/auth_provider.dart';
 
@@ -81,15 +82,6 @@ class SupportPage extends StatelessWidget {
   }
 }
 
-class ConfigurationPage extends StatelessWidget {
-  const ConfigurationPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text("ConfigurationPage");
-  }
-}
-
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -111,7 +103,7 @@ class AppRouter {
     '/wallets': 'Wallets',
     '/reports': 'Reports',
     '/support': 'Support',
-    '/configuration': 'Preferences',
+    '/configurations': 'Configurations',
   };
 
   static final GoRouter router = GoRouter(
@@ -193,9 +185,10 @@ class AppRouter {
                 path: 'support',
                 builder: (context, state) => const SupportPage(),
               ),
-              GoRoute(name: 'Preferences',
-                path: 'configuration',
-                builder: (context, state) => const ConfigurationPage(),
+
+              GoRoute(name: 'Configurations',
+                path: 'configurations',
+                builder: (context, state) => const ConfigurationsPage(),
               ),
             ]
           ),
