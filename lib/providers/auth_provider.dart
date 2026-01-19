@@ -8,11 +8,20 @@ import 'package:http/http.dart' as http;
 
 import 'package:sports/config/env_config.dart';
 import 'package:sports/utils/logs.dart';
+import 'package:sports/providers/entitlements.dart';
+
+enum AuthStatus {
+  initializing,
+  unauthenticated,
+  authenticated,
+}
 
 class AuthProvider extends ChangeNotifier {
+  AuthStatus status = AuthStatus.initializing;
+  Entitlements? _entitlements;
+
   // Estado interno
   Map<String, dynamic> _tokens = {};
-
   String? _userEmail;
   bool _isProcessing = false;
   String? _errorMessage;
@@ -26,14 +35,17 @@ class AuthProvider extends ChangeNotifier {
   final String redirectUri = EnvConfig.redirectUri;
 
   // ------------------------------------------------------------
-  // Getters públicos
+  // Getters/Setters públicos
   // ------------------------------------------------------------
   String? get idToken => _tokens["id_token"];
   String? get accessToken => _tokens["access_token"];
   String? get refreshToken => _tokens["refresh_token"];
   int? get expiresIn => _tokens["expires_in"];
   int? get issuedAt => _tokens["issued_at"];
-
+  Entitlements? get entitlements => _entitlements;
+  void setEntitlements(Entitlements entitlements) {
+    _entitlements = entitlements;
+  }
   String? get userEmail => _userEmail;
   bool get isProcessing => _isProcessing;
   String? get errorMessage => _errorMessage;
@@ -51,16 +63,53 @@ class AuthProvider extends ChangeNotifier {
     // Caso 2: es string tipo "[admin]"
     if (raw is String) {
       final clean = raw.replaceAll("[", "").replaceAll("]", "").trim();
-      final parts = clean.split(",");
+      final parts = clean.split(" ");
       return parts.isNotEmpty ? parts.first.trim() : "";
     }
 
     return "";
   }
 
-  AuthProvider() {
+  AuthProvider();
+
+  Future<void> init() async {
+    // 1. Restaurar tokens
     _loadPersistedTokens();
+
+    // 2. Si no hay sesión previa
+    if (idToken == null) {
+      status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
+
+    // 3. Asegurar token válido (refresh si hace falta)
+    final valid = await ensureValidAccessToken();
+    if (valid == null) {
+      logout();
+      notifyListeners();
+      return;
+    }
+
+    // 4. Extraer email
+    final payload = _decodePayload(idToken!);
+    _userEmail = payload?["email"];
+    if (_userEmail == null) {
+      logout();
+      notifyListeners();
+      return;
+    }
+
+    // 5. Si hay sesión → cargar entitlements automáticamente
+    if (_entitlements != null) {
+      await _entitlements!.load();
+    }
+
+    // 6. Listo
+    status = AuthStatus.authenticated;
+    notifyListeners();
   }
+
 
   // ------------------------------------------------------------
   // Cargar sesión desde sessionStorage
@@ -71,20 +120,18 @@ class AuthProvider extends ChangeNotifier {
     final raw = web.window.sessionStorage.getItem(_storageKey);
     if (raw == null) {
       log("ℹ️ No hay sesión previa.");
+      status = AuthStatus.unauthenticated;
+      notifyListeners();
       return;
     }
-
     _tokens = jsonDecode(raw);
-
     if (idToken == null) {
       log("⚠️ auth_tokens encontrado pero sin id_token. Limpiando...");
       logout();
       return;
     }
-
     final payload = _decodePayload(idToken!);
     _userEmail = payload?["email"];
-
     if (_userEmail == null) {
       log("⚠️ id_token corrupto o inválido. Limpiando...");
       logout();
@@ -215,7 +262,11 @@ class AuthProvider extends ChangeNotifier {
         _userEmail = payload?["email"];
 
         log("✅ Sesión iniciada: $_userEmail");
-
+        // Cargar permisos después de login
+        if (entitlements != null) {
+          await _entitlements!.load();
+        }
+        status = AuthStatus.authenticated;
         notifyListeners();
       }
       else {
@@ -256,6 +307,10 @@ class AuthProvider extends ChangeNotifier {
         _tokens = data;
         web.window.sessionStorage.setItem(_storageKey, jsonEncode(_tokens));
 
+        if (entitlements != null) {
+          await _entitlements!.load();
+        }
+        status = AuthStatus.authenticated;
         notifyListeners();
         return true;
       }
@@ -283,22 +338,21 @@ class AuthProvider extends ChangeNotifier {
     _userEmail = null;
     _isProcessing = false;
     _errorMessage = null;
+    status = AuthStatus.unauthenticated;
+    _entitlements!.clean();
 
     web.window.sessionStorage.removeItem(_storageKey);
     web.window.sessionStorage.removeItem('pkce_verifier');
 
     notifyListeners();
-
     if (kIsWeb) {
       web.window.history.replaceState(null, '', '/login');
       web.document.title = "Challengers App";
     }
-
     final logoutUrl = Uri.https(cognitoDomain, '/logout', {
       'client_id': clientId,
       'logout_uri': redirectUri,
     });
-
     Future.microtask(() {
       web.window.location.replace(logoutUrl.toString());
     });

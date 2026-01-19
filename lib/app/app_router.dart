@@ -117,17 +117,27 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
-      final authProv = Provider.of<AuthProvider>(context, listen: false);
-      final loggedIn = authProv.userEmail != null;
-      final processing = authProv.isProcessing;
-      final goingToLogin = state.matchedLocation == '/login';
-      if (processing) return null;
-      if (!loggedIn && !goingToLogin) return '/login';
-      if (authProv.isExpired() && !goingToLogin) {
-        authProv.logout(); // opcional pero recomendable
+      final auth = context.read<AuthProvider>();
+      // 1. Mientras AuthProvider está inicializando → no redirigir
+      if (auth.status == AuthStatus.initializing) {
+        return null;
+      }
+      // 2. Mientras está procesando login (intercambio de code) → no redirigir
+      if (auth.isProcessing) {
+        return null;
+      }
+      final loggedIn = auth.status == AuthStatus.authenticated;
+      // final goingToLogin = state.matchedLocation == '/login';    // <- old version, no usar, no funciona bien con F5
+      final goingToLogin = state.uri.path == '/login';
+      // 2. Si NO está autenticado → forzar /login
+      if (!loggedIn && !goingToLogin) {
         return '/login';
       }
-      if (loggedIn && goingToLogin) return '/';
+      // 3. Si está autenticado y va a /login → mandarlo al home
+      if (loggedIn && goingToLogin) {
+        return '/';
+      }
+      // 4. En cualquier otro caso → no redirigir
       return null;
     },
 

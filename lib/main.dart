@@ -33,6 +33,8 @@ void main() async {
   );
   final api = ApiService(rest: rest);
   final entitlements = Entitlements()..setApi(api);
+  auth.setEntitlements(entitlements);
+  await auth.init();
 
   runApp(
     MultiProvider(

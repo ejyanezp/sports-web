@@ -15,6 +15,11 @@ class Entitlements extends ChangeNotifier {
 
   bool get isLoaded => _loaded;
 
+  void clean() {
+    _loaded = false;
+    _permissions = {};
+  }
+
   Future<void> load() async {
     if (_api == null) {
       log("ApiService.instance == null");
