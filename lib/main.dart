@@ -26,38 +26,22 @@ void main() async {
   // validación de variables de entorno
   EnvConfig.validate();
 
+  final auth = AuthProvider();
+  final rest = RestDriver(
+    baseUrl: EnvConfig.apiBaseUrl,
+    getToken: () => auth.ensureValidAccessToken(),
+  );
+  final api = ApiService(rest: rest);
+  final entitlements = Entitlements()..setApi(api);
+
   runApp(
     MultiProvider(
-      providers: [  // providers globales
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-
-        // 2. RestDriver depende del token → ProxyProvider
-        ProxyProvider<AuthProvider, RestDriver>(
-          update: (_, auth, _) {
-            return RestDriver(
-              baseUrl: EnvConfig.apiBaseUrl,
-              // Se debe pasar una función al token y no el valor del token, porque el mismo podría cambiar.
-              // Ejemplo: después de aplicar el refresh token.
-              // Se usa el access token para implementar autorizaciones.
-                getToken: () => auth.ensureValidAccessToken(),
-            );
-          },
-        ),
-
-        // 3. ApiService depende de RestDriver → ProxyProvider
-        ProxyProvider<RestDriver, ApiService>(
-          update: (_, rest, _) => ApiService(rest: rest),
-        ),
-
-        ChangeNotifierProxyProvider<ApiService, Entitlements>(
-          create: (_) => Entitlements(),
-          update: (_, api, ent) {
-            ent!.setApi(api);
-            return ent;
-          },
-        ),
+      providers: [
+        ChangeNotifierProvider.value(value: auth),
+        Provider.value(value: rest),
+        Provider.value(value: api),
+        ChangeNotifierProvider.value(value: entitlements),
       ],
-
       child: const MyApp()
     )
   );
