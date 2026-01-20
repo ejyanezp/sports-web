@@ -534,6 +534,9 @@ class _AvatarConfiguratorState extends State<AvatarConfigurator> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 12),
+              Text("Preview", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 12),
               CircleAvatar(
                 radius: 36,
                 backgroundColor: bgColors[bgColorIndex],
@@ -548,29 +551,23 @@ class _AvatarConfiguratorState extends State<AvatarConfigurator> {
 
   Widget _buildIconSelector() {
     return SizedBox(
-      height: 60,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: icons.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, i) {
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: List.generate(icons.length, (i) {
           final isSelected = i == iconIndex;
           return GestureDetector(
-            onTap: () {
-              setState(() => iconIndex = i);
-              _update();
-            },
+            onTap: () => setState(() => iconIndex = i),
             child: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue[50] : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? Colors.blue : Colors.grey[300]!, width: 1.5),
+                shape: BoxShape.circle,
+                color: isSelected ? Color(0xFF238636) : Colors.transparent,
               ),
-              child: Icon(icons[i], size: 28, color: iconColors[iconColorIndex]),
+              child: Icon(icons[i], size: 32, color: Colors.white,),
             ),
           );
-        },
+        }),
       ),
     );
   }
