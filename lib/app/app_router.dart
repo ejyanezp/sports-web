@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'package:sports/home_page.dart';
+import 'package:sports/simple_auth_page.dart';
 import 'package:sports/pages/championship_page.dart';
 import 'package:sports/pages/configurations_page.dart';
-import 'package:sports/simple_auth_page.dart';
+import 'package:sports/pages/sport_page.dart';
+import 'package:sports/pages/smart_accounts_page.dart';
 import 'package:sports/providers/auth_provider.dart';
-
-import '../pages/sport_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -55,15 +55,6 @@ class ChallengesPage extends StatelessWidget {
   }
 }
 
-class WalletsPage extends StatelessWidget {
-  const WalletsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text("WalletsPage");
-  }
-}
-
 class ReportsPage extends StatelessWidget {
   const ReportsPage({super.key});
 
@@ -79,15 +70,6 @@ class SupportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text("SupportPage");
-  }
-}
-
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text("ProfilePage");
   }
 }
 
@@ -174,7 +156,7 @@ class AppRouter {
               ),
               GoRoute(name: 'Wallets',
                 path: 'wallets',
-                builder: (context, state) => const WalletsPage(),
+                builder: (context, state) => const SmartAccountsPage(),
               ),
               GoRoute(name: 'Reports',
                 path: 'reports',

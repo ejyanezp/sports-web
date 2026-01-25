@@ -30,6 +30,7 @@ class SportsPage extends StatelessWidget {
 
 class SportsView extends StatelessWidget {
   const SportsView({super.key});
+  final String module = "sports";
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,14 @@ class SportsView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final canWrite = entitlements.can("sports.write");
+    final canRead = entitlements.can(module, "read");
+    if (!canRead) {
+      return const Center(child: Text("No tienes permiso para leer deportes."));
+    }
+
+    final canCreate = entitlements.can(module, "create");
+    final canUpdate = entitlements.can(module, "update");
+    final canDelete = entitlements.can(module, "delete");
 
     if (sportsProv.error != null) {
       return Center(child: Text(sportsProv.error!));
@@ -61,34 +69,32 @@ class SportsView extends StatelessWidget {
               : CircleAvatar(child: Text(sport.name.isNotEmpty ? sport.name[0] : '?'),),
             title: Text(sport.name),
             subtitle: Text(sport.logoUrl ?? 'No logo'),
-            trailing: canWrite
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _openSportDialog(context, sport: sport),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () =>
-                          context.read<SportsProvider>().deleteSport(sport.name),
-                    ),
-                  ],
-                )
-              : null,
+            trailing: Row(mainAxisSize: MainAxisSize.min,
+              children: [
+                canUpdate? IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => _openSportDialog(context, sport: sport),
+                ) : Container(),
+                canDelete? IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () =>
+                      context.read<SportsProvider>().deleteSport(sport.name),
+                ) : Container(),
+              ],
+            )
           );
         },
       ),
       // Posicionamos el botón manualmente ya que no hay Scaffold interno
-      Positioned(
-        bottom: 24,
-        right: 24,
-        child: FloatingActionButton(
-          onPressed: () => _openSportDialog(context),
-          child: const Icon(Icons.add),
+      if (canCreate)
+        Positioned(
+          bottom: 24,
+          right: 24,
+          child: FloatingActionButton(
+            onPressed: () => _openSportDialog(context),
+            child: const Icon(Icons.add),
+          ),
         ),
-      ),
     ]);
   }
 

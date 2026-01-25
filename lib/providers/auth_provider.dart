@@ -207,11 +207,7 @@ class AuthProvider extends ChangeNotifier {
     final authUrl = Uri.https(cognitoDomain, '/oauth2/authorize', {
       'client_id': clientId,
       'response_type': 'code',
-      'scope': 'openid email'
-          ' urn:challengers:api/sports.read'
-          ' urn:challengers:api/sports.write'
-          ' urn:challengers:api/championships.read'
-          ' urn:challengers:api/championships.write',
+      'scope': 'openid email profile',
       'redirect_uri': redirectUri,
       'code_challenge': challenge,
       'code_challenge_method': 'S256',

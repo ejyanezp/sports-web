@@ -30,6 +30,7 @@ class ChampionshipsPage extends StatelessWidget {
 
 class ChampionshipsView extends StatelessWidget {
   const ChampionshipsView({super.key});
+  final String module = "championships";
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +41,13 @@ class ChampionshipsView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final canWrite = entitlements.can("championships.write");
+    final canRead = entitlements.can(module, "read");
+    if (!canRead) {
+      return const Center(child: Text("No tienes permiso para leer campeonatos."));
+    }
+    final canCreate = entitlements.can(module, "create");
+    final canUpdate = entitlements.can(module, "update");
+    final canDelete = entitlements.can(module, "delete");
 
     if (prov.error != null) {
       return Center(child: Text(prov.error!));
@@ -62,26 +69,24 @@ class ChampionshipsView extends StatelessWidget {
                   : CircleAvatar(child: Text(ch.name[0])),
               title: Text(ch.name),
               subtitle: Text("${ch.sport} • ${ch.scope ?? 'No scope'}"),
-              trailing: canWrite
-                  ? Row(
+              trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
+                  canUpdate? IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () => _openDialog(context, ch: ch),
-                  ),
-                  IconButton(
+                  ) : Container(),
+                  canDelete? IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () =>
                         context.read<ChampionshipsProvider>().deleteChampionship(ch.id),
-                  ),
+                  ) : Container(),
                 ],
-              )
-                  : null,
+              ),
             );
           },
         ),
-        if (canWrite)
+        if (canCreate)
           Positioned(
             bottom: 24,
             right: 24,

@@ -25,7 +25,7 @@ class ApiService {
     return rest.deleteSport(name);
   }
 
-  Future<Map<String, bool>> getEntitlements() {
+  Future<Map<String, List<String>>> getEntitlements() {
     log("ApiService.getEntitlements");
     return rest.getEntitlements();
   }

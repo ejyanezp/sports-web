@@ -5,7 +5,8 @@ import 'package:sports/utils/logs.dart';
 class Entitlements extends ChangeNotifier {
   bool _loaded = false;
   ApiService? _api;
-  Map<String, bool> _permissions = {};
+  // Nuevo modelo: módulo -> lista de acciones
+  Map<String, List<String>> _permissions = {};
 
   Entitlements() : _loaded = false;
 
@@ -31,15 +32,17 @@ class Entitlements extends ChangeNotifier {
     }
     log("ApiService.instance != null, cargar permisos");
     final response = await ApiService.instance!.getEntitlements();
-    _permissions = Map<String, bool>.from(response);
+    // Convertimos dinámico → Map<String, List<String>>
+    _permissions = response.map((key, value) => MapEntry(key, List<String>.from(value),),);
     log("Permisos = $_permissions");
     _loaded = true;
     notifyListeners();
   }
 
-  bool can(String permission) {
-    String key = "urn:challengers:api/$permission";
-    log("key=$key");
-    return _permissions[key] == true;
+  // método can() we do an action in a given module?
+  bool can(String module, String action) {
+    final actions = _permissions[module];
+    if (actions == null) return false;
+    return actions.contains(action);
   }
 }

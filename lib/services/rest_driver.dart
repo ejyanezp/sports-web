@@ -99,26 +99,27 @@ class RestDriver {
   // -------------------------
   // ENTITLEMENTS
   // -------------------------
-  Future<Map<String, bool>> getEntitlements() async {
+  Future<Map<String, List<String>>> getEntitlements() async {
     log("RestDriver.getEntitlements");
     try {
-      final resp = await client.get(_uri('/entitlements'), headers: await _headers());
+      final resp = await client.get(_uri('/entitlements'), headers: await _headers(),);
       log("getEntitlements resp = ${resp.statusCode}");
       if (resp.statusCode != 200) {
-        throw Exception('Error getting sports: ${resp.statusCode}');
+        throw Exception('Error getting entitlements: ${resp.statusCode}');
       }
       final Map<String, dynamic> data = json.decode(resp.body);
-      return data.map((key, value) => MapEntry(key, value as bool));
+      // Convertimos dinámico → Map<String, List<String>>
+      final entitlements = data.map((key, value) => MapEntry(key, List<String>.from(value),),);
+      return entitlements;
     }
     catch (e) {
       log("exception = ${e.toString()}");
     }
     finally {
-      log("RestDriver.getSports finalizado");
+      log("RestDriver.getEntitlements finalizado");
     }
     return {};
   }
-
   // -------------------------
   // CHAMPIONSHIPS
   // -------------------------

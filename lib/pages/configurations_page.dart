@@ -12,7 +12,7 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
   String alias = "Pedro"; // Alias original, inmutable
   String language = "en";
   String? selectedCountryCode = "ES";
-  String aliasSuffix = "";
+  String aliasSuffix = "_sufix";
   int selectedAvatarSeed = 0;
 
   int iconIndex = 0;
@@ -159,19 +159,21 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
   Widget _buildPublicNameSection() {
     final country = countries.firstWhere((c) => c["code"] == selectedCountryCode, orElse: () => countries.first);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
       children: [
         const Text("Public name", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 16),
-
-        _buildReadOnlyField("Alias", alias),
         const SizedBox(height: 16),
 
         _buildCountrySelector(),
         const SizedBox(height: 16),
 
-        _buildSuffixField(),
+        _buildReadOnlyField("Alias", alias),
+        const SizedBox(height: 16),
+
+        // aliasSuffix
+        SizedBox(width: 100, child: _buildReadOnlyField("Alias Suffix", aliasSuffix)),
         const SizedBox(height: 16),
 
         if (selectedCountryCode != null)
@@ -254,32 +256,6 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
     );
   }
 
-  Widget _buildSuffixField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Alias suffix (optional)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 6),
-        TextField(
-          decoration: InputDecoration(
-            hintText: "_can, 1, _mx, etc.",
-            filled: true,
-            fillColor: Colors.black, // const Color(0xFFFDFDFE),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
-            ),
-          ),
-          onChanged: (value) => setState(() => aliasSuffix = value.trim()),
-        ),
-      ],
-    );
-  }
-
   Widget _buildPublicNamePreview({
     required String flag,
     required String publicName,
@@ -288,7 +264,7 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
     String? suggestion,
   }) {
     final hasError = isTaken;
-    final bgColor = hasError ? Colors.red[50] : Colors.blue[50];
+    // final bgColor = hasError ? Colors.red[50] : Colors.blue[50];
     final iconColor = hasError ? Colors.red : Colors.blue;
     final textColor = hasError ? Colors.red[900] : Colors.blue[900];
 
@@ -298,7 +274,9 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
         const Text("Preview", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
 
-        Container(
+        ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320), // 👈 controla el ancho
+            child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
           child: Row(
@@ -316,7 +294,7 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
               ),
             ],
           ),
-        ),
+        )),
 
         if (hasError && suggestion != null) ...[
           const SizedBox(height: 8),
@@ -330,8 +308,7 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
             ],
           ),
         ],
-      ],
-    );
+    ]);
   }
 
   // ---------------- HISTORY ----------------
@@ -528,9 +505,10 @@ class _AvatarConfiguratorState extends State<AvatarConfigurator> {
             ),
           ),
         ),
+        SizedBox(width: 40,),
         // Preview
         SizedBox(
-          width: 80, // ancho fijo para evitar que flote
+          //width: 100, // ancho fijo para evitar que flote
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -574,11 +552,31 @@ class _AvatarConfiguratorState extends State<AvatarConfigurator> {
 
   Widget _buildColorSelector(List<Color> colors, Function(int) onTap) {
     return SizedBox(
-      height: 40,
-      child: ListView.separated(
+        // height: 40,
+        child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: List.generate(colors.length, (i) {
+              //final isSelected = i == iconColorIndex;
+              return GestureDetector(
+                onTap: () => onTap(i),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: colors[i],
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                ),
+              );
+            })
+        ));
+  }
+      /*ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: colors.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (_, i) {
           return GestureDetector(
             onTap: () => onTap(i),
@@ -593,7 +591,5 @@ class _AvatarConfiguratorState extends State<AvatarConfigurator> {
             ),
           );
         },
-      ),
-    );
-  }
+      ),*/
 }
