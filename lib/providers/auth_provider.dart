@@ -52,22 +52,34 @@ class AuthProvider extends ChangeNotifier {
 
   String get groupName {
     final raw = _tokens["cognito:groups"];
-
     if (raw == null) return "";
-
     // Caso 1: ya es lista
     if (raw is List) {
       return raw.isNotEmpty ? raw.first : "";
     }
-
     // Caso 2: es string tipo "[admin]"
     if (raw is String) {
       final clean = raw.replaceAll("[", "").replaceAll("]", "").trim();
       final parts = clean.split(" ");
       return parts.isNotEmpty ? parts.first.trim() : "";
     }
-
     return "";
+  }
+
+  Map<String, dynamic> decodeIdToken() {
+    final parts = _tokens["id_token"].split('.');
+    if (parts.length != 3) {
+      throw FormatException('Invalid ID Token format');
+    }
+    final payload = parts[1];
+    // Base64URL → Base64
+    String normalized = base64Url.normalize(payload);
+    // Decode Base64 → UTF8 JSON
+    final decodedBytes = base64Url.decode(normalized);
+    final jsonString = utf8.decode(decodedBytes);
+    // Convert JSON → Map
+    final Map<String, dynamic> payloadMap = jsonDecode(jsonString);
+    return payloadMap;
   }
 
   AuthProvider();

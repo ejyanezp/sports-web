@@ -64,8 +64,8 @@ Widget _profileMenu(BuildContext context) {
         case 'configuration':
           context.goNamed('Configurations');
           break;
-        case 'wallets':
-          context.goNamed('Wallets');
+        case 'smart-accounts':
+          context.goNamed('SmartAccounts');
           break;
         case 'logout':
           context.read<AuthProvider>().logout();
@@ -84,12 +84,12 @@ Widget _profileMenu(BuildContext context) {
         ),
       ),
       const PopupMenuItem(
-        value: 'wallets',
+        value: 'smart-accounts',
         child: Row(
           children: [
             Icon(Icons.wallet, size: 20),
             const SizedBox(width: 12),
-            const Text('eWallets'),
+            const Text('Smart Accounts'),
           ],
         ),
       ),
