@@ -47,6 +47,10 @@ class AuthProvider extends ChangeNotifier {
     _entitlements = entitlements;
   }
   String? get userEmail => _userEmail;
+  String? get userId {
+    Map<String, dynamic> jwtIdToken = decodeIdToken();
+    return jwtIdToken['sub'];
+  }
   bool get isProcessing => _isProcessing;
   String? get errorMessage => _errorMessage;
 

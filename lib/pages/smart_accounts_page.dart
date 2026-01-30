@@ -1,65 +1,90 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-
+import 'package:sports/providers/smart_account_provider.dart';
 import 'package:sports/providers/auth_provider.dart';
 
-@JS('passkeys.create')
-external JSPromise createPasskeyJs(
-    String userId,
-    String userEmail,
-    );
-
-@JS('passkeys.sign')
-external JSPromise signWithPasskeyJs(
-    JSAny publicKeyOptions, // lo definiremos bien cuando armemos el flujo de login
-    );
-
-Future<Map<String, dynamic>> createPasskeyDart({
-  required String userId,
-  required String userEmail,
-}) async {
-  final jsResult = await createPasskeyJs(userId, userEmail).toDart;
-  // jsResult es un String JSON
-  final jsonString = jsResult as String;
-
-  // Convertimos el String JSON a Map
-  return jsonDecode(jsonString) as Map<String, dynamic>;
-}
-
-// placeholder para más adelante, cuando definamos el flujo de sign
-Future<Map<String, dynamic>> signWithPasskeyDart(JSAny publicKeyOptions) async {
-  final jsResult = await signWithPasskeyJs(publicKeyOptions).toDart;
-  return jsonDecode(jsonEncode(jsResult)) as Map<String, dynamic>;
-}
-
-class SmartAccountsPage extends StatefulWidget {
+class SmartAccountsPage extends StatelessWidget {
   const SmartAccountsPage({super.key});
 
   @override
-  State<SmartAccountsPage> createState() => _SmartAccountsPageState();
-}
-
-class _SmartAccountsPageState extends State<SmartAccountsPage> {
-  String? passkeyJson;
-
-  @override
   Widget build(BuildContext context) {
-    final authProv = context.watch<AuthProvider>();
-    Map<String, dynamic>? idTokenPayload = authProv.decodeIdToken();
-    final userId = idTokenPayload['sub'];
-    final userEmail = idTokenPayload['email'];
-    return Column(children: [
-      ElevatedButton(onPressed: () async {
-          final passkey = await createPasskeyDart(userId: userId, userEmail: userEmail);
-          passkeyJson = const JsonEncoder.withIndent('  ').convert(passkey);
-          setState(() {});
-        },
-      child: Text("Crear Passkey"),
+    final smartAccountProvider = context.watch<SmartAccountProvider>();
+    final authProvider = context.watch<AuthProvider>();
+
+    final isLoading = smartAccountProvider.state == PasskeyFlowState.requestingChallenge ||
+        smartAccountProvider.state == PasskeyFlowState.waitingForWebAuthn ||
+        smartAccountProvider.state == PasskeyFlowState.verifying;
+
+    final isCompleted = smartAccountProvider.state == PasskeyFlowState.completed;
+
+    final userEmail = authProvider.userEmail;
+    final userId = authProvider.userId;
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Explanation text
+          const Text("To challenge safely, you need to create your Smart Account. "
+            "This account is associated with a passkey on your device, which guarantees "
+            "maximum security without passwords or private keys.",
+            style: TextStyle(fontSize: 16),
+          ),
+
+          const SizedBox(height: 32),
+
+          // If Smart Account is created, show it
+          if (isCompleted) ...[
+            const Text(
+              "Your Smart Account is ready:",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(
+              smartAccountProvider.smartAccountAddress ?? "",
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.green,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+
+          // If not created, show the button
+          if (!isCompleted) ...[
+            Center(
+              child: ElevatedButton(
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                  await smartAccountProvider.createSmartAccount(
+                    userId: userId ?? "test123",
+                    userEmail: userEmail ?? "test123@correo.com",
+                  );
+                },
+                child: isLoading
+                    ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : const Text("Create Smart Account"),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 20),
+
+          // Error message
+          if (smartAccountProvider.state == PasskeyFlowState.error &&
+              smartAccountProvider.errorMessage != null)
+            Text(
+              smartAccountProvider.errorMessage!,
+              style: const TextStyle(color: Colors.red),
+            ),
+        ],
       ),
-      passkeyJson != null ? Text(passkeyJson!) : Container(),
-    ]);
+    );
   }
 }

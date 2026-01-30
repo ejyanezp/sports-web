@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:sports/models/sport.dart';
-import 'package:sports/utils/logs.dart';
 import 'package:sports/models/championship.dart';
+import 'package:sports/models/passkey_verify_request.dart';
+import 'package:sports/utils/logs.dart';
 
 // Se debe pasar una función al token y no el valor del token, porque el mismo podría cambiar.
 // Ejemplo: después de aplicar el refresh token.
@@ -209,5 +210,55 @@ class RestDriver {
     if (resp.statusCode != 204) {
       throw Exception('Error deleting championship: ${resp.statusCode}');
     }
+  }
+
+  // Smart account management
+  // 1) Register passkey
+  Future<Map<String, dynamic>> postPasskeyRegister({required String userId, required String userEmail}) async {
+    log("RestDriver.postPasskeyRegister userId=$userId");
+    try {
+      final resp = await client.post(_uri('/webauthn/passkey/register'),
+        headers: await _headers(),
+        body: json.encode({
+          'user_id': userId,
+          'user_email': userEmail,
+        }),
+      );
+      log("resp = ${resp.statusCode}");
+      if (resp.statusCode != 200) {
+        throw Exception('Error in /webauthn/passkey/register: ${resp.statusCode}');
+      }
+      return json.decode(resp.body) as Map<String, dynamic>;
+    }
+    catch (e) {
+      log("exception = ${e.toString()}");
+    }
+    finally {
+      log("RestDriver.postPasskeyRegister finalizado");
+    }
+    return {};
+  }
+
+  Future<Map<String, dynamic>> postPasskeyVerify(PasskeyVerifyRequest request) async {
+    log("RestDriver.postPasskeyVerify mode=${request.mode} userId=${request.userId}");
+    try {
+      final resp = await client.post(
+        _uri('/webauthn/passkey/verify'),
+        headers: await _headers(),
+        body: json.encode(request.toJson()),
+      );
+      log("resp = ${resp.statusCode}");
+      if (resp.statusCode != 200) {
+        throw Exception('Error in /webauthn/passkey/verify: ${resp.statusCode}');
+      }
+      return json.decode(resp.body) as Map<String, dynamic>;
+    }
+    catch (e) {
+      log("exception = ${e.toString()}");
+    }
+    finally {
+      log("RestDriver.postPasskeyVerify finalizado");
+    }
+    return {};
   }
 }

@@ -1,7 +1,6 @@
 class Sport {
   static final String defaultLogoUrl = "default-logo.png";
 
-  @override
   String _name;       // key
   String? _logoUrl;    // optional
 

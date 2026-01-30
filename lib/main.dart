@@ -3,13 +3,13 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import 'package:sports/config/env_config.dart';
-import 'package:sports/providers/auth_provider.dart';
 import 'package:sports/services/api_service.dart';
 import 'package:sports/services/rest_driver.dart';
 import 'package:sports/utils/logs.dart';
 import 'package:sports/app/app_router.dart';
 import 'package:sports/providers/entitlements.dart';
-
+import 'package:sports/providers/auth_provider.dart';
+import 'package:sports/providers/smart_account_provider.dart';
 /*
 Execute in LOCALHOST as
 flutter run -d chrome --web-port 8088 \
@@ -38,6 +38,7 @@ void main() async {
   final entitlements = Entitlements()..setApi(api);
   auth.setEntitlements(entitlements);
   await auth.init();
+  final smartAccountProvider = SmartAccountProvider(api: api);
 
   runApp(
     MultiProvider(
@@ -46,6 +47,7 @@ void main() async {
         Provider.value(value: rest),
         Provider.value(value: api),
         ChangeNotifierProvider.value(value: entitlements),
+        ChangeNotifierProvider.value(value: smartAccountProvider),
       ],
       child: const MyApp()
     )

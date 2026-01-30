@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:sports/providers/championship_provider.dart';
 import 'package:sports/models/championship.dart';

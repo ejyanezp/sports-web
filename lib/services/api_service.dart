@@ -1,7 +1,10 @@
 import 'package:sports/models/sport.dart';
+import 'package:sports/models/championship.dart';
+import 'package:sports/models/passkey_register_response.dart';
+import 'package:sports/models/passkey_verify_request.dart';
+import 'package:sports/models/passkey_verify_response.dart';
 import 'rest_driver.dart';
 import 'package:sports/utils/logs.dart';
-import 'package:sports/models/championship.dart';
 
 class ApiService {
   static ApiService? instance;
@@ -53,4 +56,29 @@ class ApiService {
     return rest.deleteChampionship(id);
   }
 
+  // Smart Accounts
+  Future<PasskeyRegisterResponse> passkeyRegister(String userId, String userEmail) async {
+    try {
+      // Llamada al RestDriver
+      final json = await rest.postPasskeyRegister(userId: userId, userEmail: userEmail);
+      // Conversión a modelo tipado
+      return PasskeyRegisterResponse.fromJson(json);
+    }
+    catch (e) {
+      // Puedes mejorar este log según tu estilo
+      log("ApiService.passkeyRegister exception: ${e.toString()}");
+      rethrow; // Deja que el provider decida cómo manejarlo
+    }
+  }
+
+  Future<PasskeyVerifyResponse> verifyPasskey(PasskeyVerifyRequest request) async {
+    try {
+      final json = await rest.postPasskeyVerify(request);
+      return PasskeyVerifyResponse.fromJson(json);
+    }
+    catch (e) {
+      log("ApiService.verifyPasskey exception: ${e.toString()}");
+      rethrow;
+    }
+  }
 }
