@@ -1,6 +1,7 @@
 class PasskeyRegisterResponse {
   final String challenge;
   final String mode;
+  // Relying Party Identifier == Es el dominio para el cual el passkey es válido
   final String rpId;
   final String userId;
   final String userEmail;

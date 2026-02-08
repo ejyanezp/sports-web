@@ -82,7 +82,7 @@ class AppRouter {
     '/teams': 'Teams',
     '/athletes': 'Athletes',
     '/challenges': 'Challenges',
-    '/smart-accounts': 'Smart Accounts',
+    '/smart-accounts': 'Smart Account',
     '/reports': 'Reports',
     '/support': 'Support',
     '/configurations': 'Configurations',

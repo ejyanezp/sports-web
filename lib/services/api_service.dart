@@ -74,6 +74,7 @@ class ApiService {
   Future<PasskeyVerifyResponse> verifyPasskey(PasskeyVerifyRequest request) async {
     try {
       final json = await rest.postPasskeyVerify(request);
+      log("### postPasskeyVerify = $json");
       return PasskeyVerifyResponse.fromJson(json);
     }
     catch (e) {

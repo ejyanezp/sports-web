@@ -60,34 +60,66 @@ function credentialToJSON(cred) {
   return JSON.stringify(json);
 }
 
+function base64urlToBytes(base64url) {
+  // Convert from Base64URL to standard Base64
+  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+
+  // Add padding if missing
+  const pad = base64.length % 4;
+  if (pad) {
+    base64 += '='.repeat(4 - pad);
+  }
+
+  // Decode to binary string
+  const binary = atob(base64);
+
+  // Convert binary string to Uint8Array
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+function utf8ToBytes(str) {
+  const encoder = new TextEncoder();
+  return encoder.encode(str);
+}
+
 // API global para Flutter
 window.passkeys = {
   // Crear Passkey (registro)
-  async create(userId, userEmail) {
+  async create(userId, userEmail, challengeB64, rpId) {
+    const challengeBytes = base64urlToBytes(challengeB64);
     const publicKey = {
-      challenge: randomBytes(32),
-
+      challenge: challengeBytes,
+      // // Relying Party
       rp: {
-        name: "Sports App",
+        name: "Challengers",
+        // Relying Party Identifier == Es el dominio para el cual el passkey es válido
+        id: rpId,
       },
-
       user: {
-        id: new TextEncoder().encode(userId),
+        id:  utf8ToBytes(userId),
         name: userEmail,
         displayName: userEmail,
       },
-
+      // Indica qué algoritmos de clave pública acepta tu backend.
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },   // ES256
         { type: "public-key", alg: -257 }, // RS256
       ],
-
+      // residentKey - si la passkey debe ser residente
+      // userVerification - si debe pedir biometría/PIN
       authenticatorSelection: {
-        residentKey: "required",
-        userVerification: "required",
+        residentKey: "required",      // puede ser tambien "preferred"
+        userVerification: "required", // puede ser tambien "preferred"
       },
-
+      // Tiempo máximo para completar la operación.
       timeout: 60000,
+      // none → No quiero certificados del dispositivo. Solo dame la clave pública.
+      // indirect / direct → Dame certificados que prueben que la passkey viene de un hardware específico (TPM, YubiKey, etc.
       attestation: "none",
     };
 

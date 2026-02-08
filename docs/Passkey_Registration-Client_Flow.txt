@@ -1,0 +1,30 @@
+## Use Website:
+## https://sequencediagram.org/
+
+title Create Smart Account
+participant "Flutter" as Frontend
+participant "backend \".../register\"\nendpoint" as Backend1
+participant "Javascript" as JS
+participant browser
+participant "System's passkey" as device
+participant "backend \".../verify\nregister mode" as Backend2
+participant "backend \".../verify\nauthn mode" as Backend3
+
+==Esta parte cubre:\nFuture<void> createSmartAccount({required String userId, required String userEmail}) async {\n    ...\n    await startPasskeyRegistration(userId: userId, userEmail: userEmail);\n    final webauthnJson = await _executeWebAuthnCreate();\n    ...\n  }==
+
+Frontend->Backend1: Passkey registration.\nPOST /webauthn/passkey/register.\nParams: userId, userEmail.
+Backend1->Backend1: Generate challenge\n & rp_id
+note over Backend1: Challenge is:\n* A String (not bytes)\n* Base64URL encoding of 32\nrandom bytes with no padding\n* Safe for JSON on HTTP.
+Backend1-->Frontend: JSON response with:\nuserId, userEmail, rpId,\nmode, challenge.
+note over Frontend: Flutter must not\nmodify challenge
+Frontend->JS: create passkey and sign challenge.\nFunction createPasskeyDart\nParams: userId, userEmail, rpId, challenge.
+
+JS->JS: * Convert challenge (String B64URL) to challengeBytes\n* Create publicKey with challengeBytes.
+JS->browser: Call navigator.credentials.create({ publicKey });
+browser->browser: Creates clientDataJSON
+browser->device: publicKey + hash(clientDataJSON)
+device->device: * Generate key pair\n* Build authenticatorData\n* Sign authenticatorData || hash(clientDataJSON)\n* Build attestationObject
+device-->browser: return PublicKeyCredential\n(has clientDataJSON + attestationObject)
+browser-->JS: return PublicKeyCredential\n(has clientDataJSON + attestation objects)
+JS->JS: * Extract clientDataJSON and attestationObject\n* Convert both to Base64URL\n* Build JSON response to Flutter
+JS-->Frontend: JSON response with clientDataJSON\n+ attestationObject + rawId

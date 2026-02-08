@@ -89,7 +89,7 @@ Widget _profileMenu(BuildContext context) {
           children: [
             Icon(Icons.wallet, size: 20),
             const SizedBox(width: 12),
-            const Text('Smart Accounts'),
+            const Text('Smart Account'),
           ],
         ),
       ),

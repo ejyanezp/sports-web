@@ -418,12 +418,17 @@ class _AvatarConfiguratorState extends State<AvatarConfigurator> {
   late int bgColorIndex;
 
   final icons = [
-    Icons.emoji_events_outlined,
-    Icons.star_outline,
-    Icons.shield_outlined,
-    Icons.sports_soccer,
-    Icons.sports_basketball,
-    Icons.sports_baseball,
+    Icons.face,
+    Icons.face_2,
+    Icons.face_3,
+    Icons.face_4,
+    Icons.face_5,
+    Icons.face_6,
+    Icons.child_care,
+    Icons.theater_comedy,
+    Icons.mood,
+    Icons.smart_toy,
+    Icons.support_agent,
     Icons.sports_football,
     Icons.rocket_launch_outlined,
     Icons.bolt_outlined,

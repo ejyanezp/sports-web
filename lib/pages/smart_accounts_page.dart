@@ -26,9 +26,8 @@ class SmartAccountsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Explanation text
-          const Text("To challenge safely, you need to create your Smart Account. "
-            "This account is associated with a passkey on your device, which guarantees "
-            "maximum security without passwords or private keys.",
+          const Text("To challenge other participants safely, you need to create your Smart Account. This account is associated "
+            "with a passkey on your device, which guarantees maximum security without passwords or private keys.",
             style: TextStyle(fontSize: 16),
           ),
 

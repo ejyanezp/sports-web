@@ -22,6 +22,8 @@ enum PasskeyFlowState {
 external JSPromise createPasskeyJs(
     String userId,
     String userEmail,
+    String challenge, // challenge comming from the registration
+    String rpId       // rpId coming from the registration
     );
 
 @JS('passkeys.sign')
@@ -29,12 +31,14 @@ external JSPromise signWithPasskeyJs(
     JSAny publicKeyOptions, // lo definiremos bien cuando armemos el flujo de login
     );
 
-Future<Map<String, dynamic>> createPasskeyDart({required String userId, required String userEmail}) async {
-  final jsResult = await createPasskeyJs(userId, userEmail).toDart;
-  // jsResult es un String JSON
-  final jsonString = jsResult as String;
-  // Convertimos el String JSON a Map
-  return jsonDecode(jsonString) as Map<String, dynamic>;
+Future<Map<String, dynamic>> createPasskeyDart({
+  required String userId,
+  required String userEmail,
+  required String challenge,
+  required String rpId}) async {
+  final jsResult = await createPasskeyJs(userId, userEmail, challenge, rpId).toDart;
+  log(">> createPasskeyDart: $jsResult");
+  return jsonDecode(jsResult.dartify() as String);
 }
 
 // placeholder para más adelante, cuando definamos el flujo de sign
@@ -74,6 +78,7 @@ class SmartAccountProvider extends ChangeNotifier {
     try {
       _setState(PasskeyFlowState.requestingChallenge);
       _registerData = await api.passkeyRegister(userId, userEmail);
+      log("** startPasskeyRegistration challenge: ${_registerData.challenge}");
       _setState(PasskeyFlowState.waitingForWebAuthn);
     }
     catch (e) {
@@ -83,8 +88,15 @@ class SmartAccountProvider extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> _executeWebAuthnCreate() async {
+    log("** _executeWebAuthnCreate challenge: ${_registerData.challenge}");
     try {
-      final result = await createPasskeyDart(userId: _registerData.userId, userEmail: _registerData.userEmail);
+      final result = await createPasskeyDart(
+          userId: _registerData.userId,
+          userEmail: _registerData.userEmail,
+          challenge: _registerData.challenge,
+          rpId: _registerData.rpId
+      );
+      log("executeWebAuthnCreate result: $result");
       if (result.containsKey('error')) {
         throw Exception("WebAuthn error: ${result['error']}");
       }
@@ -98,28 +110,41 @@ class SmartAccountProvider extends ChangeNotifier {
   }
 
   PasskeyVerifyRequest _buildVerifyRequest(Map<String, dynamic> webauthnJson) {
+    log("buildVerifyRequest webauthnJson: $webauthnJson");
+    log("** _buildVerifyRequest challenge: ${_registerData.challenge}");
+    final response = webauthnJson["response"] as Map<String, dynamic>;
     return PasskeyVerifyRequest(
       mode: _registerData.mode,
       challenge: _registerData.challenge,
       rpId: _registerData.rpId,
       userId: _registerData.userId,
       userEmail: _registerData.userEmail,
-      id: webauthnJson['id'],
-      rawId: webauthnJson['rawId'],
-      type: webauthnJson['type'],
-      clientDataJSON: webauthnJson['clientDataJSON'],
-      attestationObject: webauthnJson['attestationObject'],
-      authenticatorData: webauthnJson['authenticatorData'],
-      signature: webauthnJson['signature'],
-      userHandle: webauthnJson['userHandle'],
+      credential: {
+        // identificador de la passkey en Base64URL encoding
+        "id": webauthnJson["id"],
+        // identificador binario de la passkey
+        "rawId": webauthnJson["rawId"],
+        // Siempre vale "public-key"
+        "type": webauthnJson["type"],
+        "response": {
+          "clientDataJSON": response["clientDataJSON"],
+          "attestationObject": response["attestationObject"],
+          "authenticatorData": response["authenticatorData"],
+          "signature": response["signature"],
+          "userHandle": response["userHandle"],
+        }
+      },
     );
   }
 
   Future<void> verifyPasskey(Map<String, dynamic> webauthnJson) async {
     try {
       _setState(PasskeyFlowState.verifying);
+      log("verifyPasskey webauthnJson: $webauthnJson");
       final request = _buildVerifyRequest(webauthnJson);
+      log("** verifyPasskey request challenge: ${request.challenge}");
       final response = await api.verifyPasskey(request);
+      log("verifyPasskey response: $response");
       _smartAccountAddress = response.smartAccountAddress;
       _setState(PasskeyFlowState.completed);
     }

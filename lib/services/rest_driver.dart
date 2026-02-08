@@ -224,7 +224,7 @@ class RestDriver {
           'user_email': userEmail,
         }),
       );
-      log("resp = ${resp.statusCode}");
+      log("postPasskeyRegister resp = ${resp.statusCode}");
       if (resp.statusCode != 200) {
         throw Exception('Error in /webauthn/passkey/register: ${resp.statusCode}');
       }
@@ -241,13 +241,14 @@ class RestDriver {
 
   Future<Map<String, dynamic>> postPasskeyVerify(PasskeyVerifyRequest request) async {
     log("RestDriver.postPasskeyVerify mode=${request.mode} userId=${request.userId}");
+    log("** postPasskeyVerify challenge: ${request.challenge}");
     try {
       final resp = await client.post(
         _uri('/webauthn/passkey/verify'),
         headers: await _headers(),
         body: json.encode(request.toJson()),
       );
-      log("resp = ${resp.statusCode}");
+      log("postPasskeyVerify resp = ${resp.statusCode}");
       if (resp.statusCode != 200) {
         throw Exception('Error in /webauthn/passkey/verify: ${resp.statusCode}');
       }
