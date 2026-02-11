@@ -50,7 +50,7 @@ class ChampionshipsProvider extends ChangeNotifier {
     _logosReady = false;
     notifyListeners();
 
-    String baseUrl = "${EnvConfig.cdnBaseUrl}/assets/championships/";
+    String baseUrl = "${EnvConfig.cdnBaseUrl}/static-assets/championships/";
 
     for (final ch in _championships) {
       late final String finalUrl;

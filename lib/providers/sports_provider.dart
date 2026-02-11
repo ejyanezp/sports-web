@@ -54,7 +54,7 @@ class SportsProvider extends ChangeNotifier {
     _logos.clear();
     _logosReady = false;
     notifyListeners();
-    String baseUrl = "${EnvConfig.cdnBaseUrl}/assets/sports/";
+    String baseUrl = "${EnvConfig.cdnBaseUrl}/static-assets/sports/";
     for (final sport in _sports) {
       late final String finalUrl;
       if (sport.logoUrl == null || sport.logoUrl!.isEmpty) {

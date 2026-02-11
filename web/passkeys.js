@@ -35,19 +35,13 @@ function credentialToJSON(cred) {
   if (cred.response) {
     json.response = {};
     if (cred.response.clientDataJSON) {
-      json.response.clientDataJSON = bufferToBase64Url(
-        cred.response.clientDataJSON
-      );
+      json.response.clientDataJSON = bufferToBase64Url(cred.response.clientDataJSON);
     }
     if (cred.response.attestationObject) {
-      json.response.attestationObject = bufferToBase64Url(
-        cred.response.attestationObject
-      );
+      json.response.attestationObject = bufferToBase64Url(cred.response.attestationObject);
     }
     if (cred.response.authenticatorData) {
-      json.response.authenticatorData = bufferToBase64Url(
-        cred.response.authenticatorData
-      );
+      json.response.authenticatorData = bufferToBase64Url(cred.response.authenticatorData);
     }
     if (cred.response.signature) {
       json.response.signature = bufferToBase64Url(cred.response.signature);

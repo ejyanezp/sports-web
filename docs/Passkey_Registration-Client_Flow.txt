@@ -1,5 +1,6 @@
 ## Use Website:
 ## https://sequencediagram.org/
+## to render this sequence Diagram.
 
 title Create Smart Account
 participant "Flutter" as Frontend

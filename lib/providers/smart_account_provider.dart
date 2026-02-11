@@ -63,6 +63,7 @@ class SmartAccountProvider extends ChangeNotifier {
 
   // Datos temporales del challenge
   late PasskeyRegisterResponse _registerData;
+  late PasskeyVerifyResponse _verifyResponse;
 
   void _setState(PasskeyFlowState newState) {
     _state = newState;
@@ -143,9 +144,9 @@ class SmartAccountProvider extends ChangeNotifier {
       log("verifyPasskey webauthnJson: $webauthnJson");
       final request = _buildVerifyRequest(webauthnJson);
       log("** verifyPasskey request challenge: ${request.challenge}");
-      final response = await api.verifyPasskey(request);
-      log("verifyPasskey response: $response");
-      _smartAccountAddress = response.smartAccountAddress;
+      _verifyResponse = await api.verifyPasskey(request);
+      log("verifyPasskey response: $_verifyResponse");
+      _smartAccountAddress = _verifyResponse.smartAccountAddress;
       _setState(PasskeyFlowState.completed);
     }
     catch (e) {
